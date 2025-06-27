@@ -123,7 +123,6 @@ func TestSessionChat(t *testing.T) {
 				Type: opencode.F(opencode.TextPartTypeText),
 			}}),
 			ProviderID: opencode.F("providerID"),
-			SessionID:  opencode.F("sessionID"),
 		},
 	)
 	if err != nil {

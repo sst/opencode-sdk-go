@@ -1330,8 +1330,6 @@ type SessionChatParams struct {
 	ModelID    param.Field[string]                  `json:"modelID,required"`
 	Parts      param.Field[[]MessagePartUnionParam] `json:"parts,required"`
 	ProviderID param.Field[string]                  `json:"providerID,required"`
-	// Session ID
-	SessionID param.Field[string] `json:"sessionID,required"`
 }
 
 func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
