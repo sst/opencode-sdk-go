@@ -13,6 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
+	"github.com/sst/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -433,9 +434,8 @@ func (r messageMetadataAssistantTokensCacheJSON) RawJSON() string {
 }
 
 type MessageMetadataError struct {
-	// This field can have the runtime type of
-	// [MessageMetadataErrorProviderAuthErrorData],
-	// [MessageMetadataErrorUnknownErrorData], [interface{}].
+	// This field can have the runtime type of [shared.ProviderAuthErrorData],
+	// [shared.UnknownErrorData], [interface{}].
 	Data  interface{}              `json:"data,required"`
 	Name  MessageMetadataErrorName `json:"name,required"`
 	JSON  messageMetadataErrorJSON `json:"-"`
@@ -467,18 +467,16 @@ func (r *MessageMetadataError) UnmarshalJSON(data []byte) (err error) {
 // AsUnion returns a [MessageMetadataErrorUnion] interface which you can cast to
 // the specific types for more type safety.
 //
-// Possible runtime types of the union are [MessageMetadataErrorProviderAuthError],
-// [MessageMetadataErrorUnknownError],
-// [MessageMetadataErrorMessageOutputLengthError].
+// Possible runtime types of the union are [shared.ProviderAuthError],
+// [shared.UnknownError], [MessageMetadataErrorMessageOutputLengthError].
 func (r MessageMetadataError) AsUnion() MessageMetadataErrorUnion {
 	return r.union
 }
 
-// Union satisfied by [MessageMetadataErrorProviderAuthError],
-// [MessageMetadataErrorUnknownError] or
+// Union satisfied by [shared.ProviderAuthError], [shared.UnknownError] or
 // [MessageMetadataErrorMessageOutputLengthError].
 type MessageMetadataErrorUnion interface {
-	implementsMessageMetadataError()
+	ImplementsMessageMetadataError()
 }
 
 func init() {
@@ -487,12 +485,12 @@ func init() {
 		"name",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(MessageMetadataErrorProviderAuthError{}),
+			Type:               reflect.TypeOf(shared.ProviderAuthError{}),
 			DiscriminatorValue: "ProviderAuthError",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(MessageMetadataErrorUnknownError{}),
+			Type:               reflect.TypeOf(shared.UnknownError{}),
 			DiscriminatorValue: "UnknownError",
 		},
 		apijson.UnionVariant{
@@ -501,128 +499,6 @@ func init() {
 			DiscriminatorValue: "MessageOutputLengthError",
 		},
 	)
-}
-
-type MessageMetadataErrorProviderAuthError struct {
-	Data MessageMetadataErrorProviderAuthErrorData `json:"data,required"`
-	Name MessageMetadataErrorProviderAuthErrorName `json:"name,required"`
-	JSON messageMetadataErrorProviderAuthErrorJSON `json:"-"`
-}
-
-// messageMetadataErrorProviderAuthErrorJSON contains the JSON metadata for the
-// struct [MessageMetadataErrorProviderAuthError]
-type messageMetadataErrorProviderAuthErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageMetadataErrorProviderAuthError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageMetadataErrorProviderAuthErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r MessageMetadataErrorProviderAuthError) implementsMessageMetadataError() {}
-
-type MessageMetadataErrorProviderAuthErrorData struct {
-	Message    string                                        `json:"message,required"`
-	ProviderID string                                        `json:"providerID,required"`
-	JSON       messageMetadataErrorProviderAuthErrorDataJSON `json:"-"`
-}
-
-// messageMetadataErrorProviderAuthErrorDataJSON contains the JSON metadata for the
-// struct [MessageMetadataErrorProviderAuthErrorData]
-type messageMetadataErrorProviderAuthErrorDataJSON struct {
-	Message     apijson.Field
-	ProviderID  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageMetadataErrorProviderAuthErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageMetadataErrorProviderAuthErrorDataJSON) RawJSON() string {
-	return r.raw
-}
-
-type MessageMetadataErrorProviderAuthErrorName string
-
-const (
-	MessageMetadataErrorProviderAuthErrorNameProviderAuthError MessageMetadataErrorProviderAuthErrorName = "ProviderAuthError"
-)
-
-func (r MessageMetadataErrorProviderAuthErrorName) IsKnown() bool {
-	switch r {
-	case MessageMetadataErrorProviderAuthErrorNameProviderAuthError:
-		return true
-	}
-	return false
-}
-
-type MessageMetadataErrorUnknownError struct {
-	Data MessageMetadataErrorUnknownErrorData `json:"data,required"`
-	Name MessageMetadataErrorUnknownErrorName `json:"name,required"`
-	JSON messageMetadataErrorUnknownErrorJSON `json:"-"`
-}
-
-// messageMetadataErrorUnknownErrorJSON contains the JSON metadata for the struct
-// [MessageMetadataErrorUnknownError]
-type messageMetadataErrorUnknownErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageMetadataErrorUnknownError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageMetadataErrorUnknownErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r MessageMetadataErrorUnknownError) implementsMessageMetadataError() {}
-
-type MessageMetadataErrorUnknownErrorData struct {
-	Message string                                   `json:"message,required"`
-	JSON    messageMetadataErrorUnknownErrorDataJSON `json:"-"`
-}
-
-// messageMetadataErrorUnknownErrorDataJSON contains the JSON metadata for the
-// struct [MessageMetadataErrorUnknownErrorData]
-type messageMetadataErrorUnknownErrorDataJSON struct {
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageMetadataErrorUnknownErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageMetadataErrorUnknownErrorDataJSON) RawJSON() string {
-	return r.raw
-}
-
-type MessageMetadataErrorUnknownErrorName string
-
-const (
-	MessageMetadataErrorUnknownErrorNameUnknownError MessageMetadataErrorUnknownErrorName = "UnknownError"
-)
-
-func (r MessageMetadataErrorUnknownErrorName) IsKnown() bool {
-	switch r {
-	case MessageMetadataErrorUnknownErrorNameUnknownError:
-		return true
-	}
-	return false
 }
 
 type MessageMetadataErrorMessageOutputLengthError struct {
@@ -648,7 +524,7 @@ func (r messageMetadataErrorMessageOutputLengthErrorJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r MessageMetadataErrorMessageOutputLengthError) implementsMessageMetadataError() {}
+func (r MessageMetadataErrorMessageOutputLengthError) ImplementsMessageMetadataError() {}
 
 type MessageMetadataErrorMessageOutputLengthErrorName string
 

@@ -10,6 +10,7 @@ import (
 	"github.com/sst/opencode-sdk-go/internal/apijson"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
+	"github.com/sst/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -722,10 +723,8 @@ func (r eventListResponseEventSessionErrorPropertiesJSON) RawJSON() string {
 }
 
 type EventListResponseEventSessionErrorPropertiesError struct {
-	// This field can have the runtime type of
-	// [EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorData],
-	// [EventListResponseEventSessionErrorPropertiesErrorUnknownErrorData],
-	// [interface{}].
+	// This field can have the runtime type of [shared.ProviderAuthErrorData],
+	// [shared.UnknownErrorData], [interface{}].
 	Data  interface{}                                           `json:"data,required"`
 	Name  EventListResponseEventSessionErrorPropertiesErrorName `json:"name,required"`
 	JSON  eventListResponseEventSessionErrorPropertiesErrorJSON `json:"-"`
@@ -757,20 +756,17 @@ func (r *EventListResponseEventSessionErrorPropertiesError) UnmarshalJSON(data [
 // AsUnion returns a [EventListResponseEventSessionErrorPropertiesErrorUnion]
 // interface which you can cast to the specific types for more type safety.
 //
-// Possible runtime types of the union are
-// [EventListResponseEventSessionErrorPropertiesErrorProviderAuthError],
-// [EventListResponseEventSessionErrorPropertiesErrorUnknownError],
+// Possible runtime types of the union are [shared.ProviderAuthError],
+// [shared.UnknownError],
 // [EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthError].
 func (r EventListResponseEventSessionErrorPropertiesError) AsUnion() EventListResponseEventSessionErrorPropertiesErrorUnion {
 	return r.union
 }
 
-// Union satisfied by
-// [EventListResponseEventSessionErrorPropertiesErrorProviderAuthError],
-// [EventListResponseEventSessionErrorPropertiesErrorUnknownError] or
+// Union satisfied by [shared.ProviderAuthError], [shared.UnknownError] or
 // [EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthError].
 type EventListResponseEventSessionErrorPropertiesErrorUnion interface {
-	implementsEventListResponseEventSessionErrorPropertiesError()
+	ImplementsEventListResponseEventSessionErrorPropertiesError()
 }
 
 func init() {
@@ -779,12 +775,12 @@ func init() {
 		"name",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EventListResponseEventSessionErrorPropertiesErrorProviderAuthError{}),
+			Type:               reflect.TypeOf(shared.ProviderAuthError{}),
 			DiscriminatorValue: "ProviderAuthError",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EventListResponseEventSessionErrorPropertiesErrorUnknownError{}),
+			Type:               reflect.TypeOf(shared.UnknownError{}),
 			DiscriminatorValue: "UnknownError",
 		},
 		apijson.UnionVariant{
@@ -793,134 +789,6 @@ func init() {
 			DiscriminatorValue: "MessageOutputLengthError",
 		},
 	)
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorProviderAuthError struct {
-	Data EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorData `json:"data,required"`
-	Name EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorName `json:"name,required"`
-	JSON eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorJSON `json:"-"`
-}
-
-// eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorJSON contains
-// the JSON metadata for the struct
-// [EventListResponseEventSessionErrorPropertiesErrorProviderAuthError]
-type eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventSessionErrorPropertiesErrorProviderAuthError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventSessionErrorPropertiesErrorProviderAuthError) implementsEventListResponseEventSessionErrorPropertiesError() {
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorData struct {
-	Message    string                                                                     `json:"message,required"`
-	ProviderID string                                                                     `json:"providerID,required"`
-	JSON       eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorDataJSON `json:"-"`
-}
-
-// eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorDataJSON
-// contains the JSON metadata for the struct
-// [EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorData]
-type eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorDataJSON struct {
-	Message     apijson.Field
-	ProviderID  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorDataJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorName string
-
-const (
-	EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorNameProviderAuthError EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorName = "ProviderAuthError"
-)
-
-func (r EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorName) IsKnown() bool {
-	switch r {
-	case EventListResponseEventSessionErrorPropertiesErrorProviderAuthErrorNameProviderAuthError:
-		return true
-	}
-	return false
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorUnknownError struct {
-	Data EventListResponseEventSessionErrorPropertiesErrorUnknownErrorData `json:"data,required"`
-	Name EventListResponseEventSessionErrorPropertiesErrorUnknownErrorName `json:"name,required"`
-	JSON eventListResponseEventSessionErrorPropertiesErrorUnknownErrorJSON `json:"-"`
-}
-
-// eventListResponseEventSessionErrorPropertiesErrorUnknownErrorJSON contains the
-// JSON metadata for the struct
-// [EventListResponseEventSessionErrorPropertiesErrorUnknownError]
-type eventListResponseEventSessionErrorPropertiesErrorUnknownErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventSessionErrorPropertiesErrorUnknownError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventSessionErrorPropertiesErrorUnknownErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventSessionErrorPropertiesErrorUnknownError) implementsEventListResponseEventSessionErrorPropertiesError() {
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorUnknownErrorData struct {
-	Message string                                                                `json:"message,required"`
-	JSON    eventListResponseEventSessionErrorPropertiesErrorUnknownErrorDataJSON `json:"-"`
-}
-
-// eventListResponseEventSessionErrorPropertiesErrorUnknownErrorDataJSON contains
-// the JSON metadata for the struct
-// [EventListResponseEventSessionErrorPropertiesErrorUnknownErrorData]
-type eventListResponseEventSessionErrorPropertiesErrorUnknownErrorDataJSON struct {
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventSessionErrorPropertiesErrorUnknownErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventSessionErrorPropertiesErrorUnknownErrorDataJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventSessionErrorPropertiesErrorUnknownErrorName string
-
-const (
-	EventListResponseEventSessionErrorPropertiesErrorUnknownErrorNameUnknownError EventListResponseEventSessionErrorPropertiesErrorUnknownErrorName = "UnknownError"
-)
-
-func (r EventListResponseEventSessionErrorPropertiesErrorUnknownErrorName) IsKnown() bool {
-	switch r {
-	case EventListResponseEventSessionErrorPropertiesErrorUnknownErrorNameUnknownError:
-		return true
-	}
-	return false
 }
 
 type EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthError struct {
@@ -947,7 +815,7 @@ func (r eventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthErro
 	return r.raw
 }
 
-func (r EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthError) implementsEventListResponseEventSessionErrorPropertiesError() {
+func (r EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthError) ImplementsEventListResponseEventSessionErrorPropertiesError() {
 }
 
 type EventListResponseEventSessionErrorPropertiesErrorMessageOutputLengthErrorName string
