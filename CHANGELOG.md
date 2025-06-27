@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2025-06-27)
+
+Full Changelog: [v0.1.0-alpha.2...v0.1.0-alpha.3](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
+
+### Features
+
+* **api:** update via SDK Studio ([57f3230](https://github.com/sst/opencode-sdk-go/commit/57f32309023cc1f0f20c20d02a3907e390a71f61))
+
 ## 0.1.0-alpha.2 (2025-06-27)
 
 Full Changelog: [v0.1.0-alpha.1...v0.1.0-alpha.2](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
