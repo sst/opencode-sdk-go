@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.7 (2025-06-28)
+
+Full Changelog: [v0.1.0-alpha.6...v0.1.0-alpha.7](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.6...v0.1.0-alpha.7)
+
+### Chores
+
+* **ci:** only run for pushes and fork pull requests ([bea59b8](https://github.com/sst/opencode-sdk-go/commit/bea59b886800ef555f89c47a9256d6392ed2e53d))
+
 ## 0.1.0-alpha.6 (2025-06-28)
 
 Full Changelog: [v0.1.0-alpha.5...v0.1.0-alpha.6](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
