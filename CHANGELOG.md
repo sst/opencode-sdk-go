@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.6 (2025-06-28)
+
+Full Changelog: [v0.1.0-alpha.5...v0.1.0-alpha.6](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
+
+### Bug Fixes
+
+* don't try to deserialize as json when ResponseBodyInto is []byte ([5988d04](https://github.com/sst/opencode-sdk-go/commit/5988d04839cb78b6613057280b91b72a60fef33d))
+
 ## 0.1.0-alpha.5 (2025-06-27)
 
 Full Changelog: [v0.1.0-alpha.4...v0.1.0-alpha.5](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
