@@ -190,6 +190,8 @@ type ConfigMcp struct {
 	Type ConfigMcpType `json:"type,required"`
 	// This field can have the runtime type of [[]string].
 	Command interface{} `json:"command"`
+	// Enable or disable the MCP server on startup
+	Enabled bool `json:"enabled"`
 	// This field can have the runtime type of [map[string]string].
 	Environment interface{} `json:"environment"`
 	// URL of the remote MCP server
@@ -202,6 +204,7 @@ type ConfigMcp struct {
 type configMcpJSON struct {
 	Type        apijson.Field
 	Command     apijson.Field
+	Enabled     apijson.Field
 	Environment apijson.Field
 	URL         apijson.Field
 	raw         string
@@ -307,6 +310,7 @@ type ConfigProviderModel struct {
 	Name        string                    `json:"name"`
 	Options     map[string]interface{}    `json:"options"`
 	Reasoning   bool                      `json:"reasoning"`
+	ReleaseDate string                    `json:"release_date"`
 	Temperature bool                      `json:"temperature"`
 	ToolCall    bool                      `json:"tool_call"`
 	JSON        configProviderModelJSON   `json:"-"`
@@ -322,6 +326,7 @@ type configProviderModelJSON struct {
 	Name        apijson.Field
 	Options     apijson.Field
 	Reasoning   apijson.Field
+	ReleaseDate apijson.Field
 	Temperature apijson.Field
 	ToolCall    apijson.Field
 	raw         string
@@ -490,6 +495,8 @@ type McpLocal struct {
 	Command []string `json:"command,required"`
 	// Type of MCP server connection
 	Type McpLocalType `json:"type,required"`
+	// Enable or disable the MCP server on startup
+	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
 	Environment map[string]string `json:"environment"`
 	JSON        mcpLocalJSON      `json:"-"`
@@ -499,6 +506,7 @@ type McpLocal struct {
 type mcpLocalJSON struct {
 	Command     apijson.Field
 	Type        apijson.Field
+	Enabled     apijson.Field
 	Environment apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -533,14 +541,17 @@ type McpRemote struct {
 	// Type of MCP server connection
 	Type McpRemoteType `json:"type,required"`
 	// URL of the remote MCP server
-	URL  string        `json:"url,required"`
-	JSON mcpRemoteJSON `json:"-"`
+	URL string `json:"url,required"`
+	// Enable or disable the MCP server on startup
+	Enabled bool          `json:"enabled"`
+	JSON    mcpRemoteJSON `json:"-"`
 }
 
 // mcpRemoteJSON contains the JSON metadata for the struct [McpRemote]
 type mcpRemoteJSON struct {
 	Type        apijson.Field
 	URL         apijson.Field
+	Enabled     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -578,6 +589,7 @@ type Model struct {
 	Name        string                 `json:"name,required"`
 	Options     map[string]interface{} `json:"options,required"`
 	Reasoning   bool                   `json:"reasoning,required"`
+	ReleaseDate string                 `json:"release_date,required"`
 	Temperature bool                   `json:"temperature,required"`
 	ToolCall    bool                   `json:"tool_call,required"`
 	JSON        modelJSON              `json:"-"`
@@ -592,6 +604,7 @@ type modelJSON struct {
 	Name        apijson.Field
 	Options     apijson.Field
 	Reasoning   apijson.Field
+	ReleaseDate apijson.Field
 	Temperature apijson.Field
 	ToolCall    apijson.Field
 	raw         string

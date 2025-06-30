@@ -50,7 +50,6 @@ type App struct {
 	Git      bool    `json:"git,required"`
 	Hostname string  `json:"hostname,required"`
 	Path     AppPath `json:"path,required"`
-	Project  string  `json:"project,required"`
 	Time     AppTime `json:"time,required"`
 	User     string  `json:"user,required"`
 	JSON     appJSON `json:"-"`
@@ -61,7 +60,6 @@ type appJSON struct {
 	Git         apijson.Field
 	Hostname    apijson.Field
 	Path        apijson.Field
-	Project     apijson.Field
 	Time        apijson.Field
 	User        apijson.Field
 	raw         string
