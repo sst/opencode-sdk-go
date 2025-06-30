@@ -10,6 +10,7 @@ import (
 	"github.com/sst/opencode-sdk-go/internal/apijson"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
+	"github.com/sst/opencode-sdk-go/packages/ssestream"
 	"github.com/sst/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
@@ -34,11 +35,15 @@ func NewEventService(opts ...option.RequestOption) (r *EventService) {
 }
 
 // Get events
-func (r *EventService) List(ctx context.Context, opts ...option.RequestOption) (res *EventListResponse, err error) {
+func (r *EventService) ListStreaming(ctx context.Context, opts ...option.RequestOption) (stream *ssestream.Stream[EventListResponse]) {
+	var (
+		raw *http.Response
+		err error
+	)
 	opts = append(r.Options[:], opts...)
 	path := "event"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
+	return ssestream.NewStream[EventListResponse](ssestream.NewDecoder(raw), err)
 }
 
 type EventListResponse struct {
