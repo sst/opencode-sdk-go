@@ -235,6 +235,7 @@ type MessageMetadata struct {
 	Tool      map[string]MessageMetadataTool `json:"tool,required"`
 	Assistant MessageMetadataAssistant       `json:"assistant"`
 	Error     MessageMetadataError           `json:"error"`
+	User      MessageMetadataUser            `json:"user"`
 	JSON      messageMetadataJSON            `json:"-"`
 }
 
@@ -245,6 +246,7 @@ type messageMetadataJSON struct {
 	Tool        apijson.Field
 	Assistant   apijson.Field
 	Error       apijson.Field
+	User        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -554,6 +556,27 @@ func (r MessageMetadataErrorName) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type MessageMetadataUser struct {
+	Snapshot string                  `json:"snapshot"`
+	JSON     messageMetadataUserJSON `json:"-"`
+}
+
+// messageMetadataUserJSON contains the JSON metadata for the struct
+// [MessageMetadataUser]
+type messageMetadataUserJSON struct {
+	Snapshot    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *MessageMetadataUser) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r messageMetadataUserJSON) RawJSON() string {
+	return r.raw
 }
 
 type MessageRole string

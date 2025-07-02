@@ -18,6 +18,7 @@ type Client struct {
 	Options []option.RequestOption
 	Event   *EventService
 	App     *AppService
+	Find    *FindService
 	File    *FileService
 	Config  *ConfigService
 	Session *SessionService
@@ -44,6 +45,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 
 	r.Event = NewEventService(opts...)
 	r.App = NewAppService(opts...)
+	r.Find = NewFindService(opts...)
 	r.File = NewFileService(opts...)
 	r.Config = NewConfigService(opts...)
 	r.Session = NewSessionService(opts...)
