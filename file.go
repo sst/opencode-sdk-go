@@ -88,9 +88,9 @@ func (r FileReadResponseType) IsKnown() bool {
 }
 
 type FileStatusResponse struct {
-	Added   float64                  `json:"added,required"`
+	Added   int64                    `json:"added,required"`
 	File    string                   `json:"file,required"`
-	Removed float64                  `json:"removed,required"`
+	Removed int64                    `json:"removed,required"`
 	Status  FileStatusResponseStatus `json:"status,required"`
 	JSON    fileStatusResponseJSON   `json:"-"`
 }
