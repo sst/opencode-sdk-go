@@ -235,7 +235,7 @@ type MessageMetadata struct {
 	Tool      map[string]MessageMetadataTool `json:"tool,required"`
 	Assistant MessageMetadataAssistant       `json:"assistant"`
 	Error     MessageMetadataError           `json:"error"`
-	User      MessageMetadataUser            `json:"user"`
+	Snapshot  string                         `json:"snapshot"`
 	JSON      messageMetadataJSON            `json:"-"`
 }
 
@@ -246,7 +246,7 @@ type messageMetadataJSON struct {
 	Tool        apijson.Field
 	Assistant   apijson.Field
 	Error       apijson.Field
-	User        apijson.Field
+	Snapshot    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -285,6 +285,7 @@ func (r messageMetadataTimeJSON) RawJSON() string {
 type MessageMetadataTool struct {
 	Time        MessageMetadataToolTime `json:"time,required"`
 	Title       string                  `json:"title,required"`
+	Snapshot    string                  `json:"snapshot"`
 	ExtraFields map[string]interface{}  `json:"-,extras"`
 	JSON        messageMetadataToolJSON `json:"-"`
 }
@@ -294,6 +295,7 @@ type MessageMetadataTool struct {
 type messageMetadataToolJSON struct {
 	Time        apijson.Field
 	Title       apijson.Field
+	Snapshot    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -558,27 +560,6 @@ func (r MessageMetadataErrorName) IsKnown() bool {
 	return false
 }
 
-type MessageMetadataUser struct {
-	Snapshot string                  `json:"snapshot"`
-	JSON     messageMetadataUserJSON `json:"-"`
-}
-
-// messageMetadataUserJSON contains the JSON metadata for the struct
-// [MessageMetadataUser]
-type messageMetadataUserJSON struct {
-	Snapshot    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageMetadataUser) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageMetadataUserJSON) RawJSON() string {
-	return r.raw
-}
-
 type MessageRole string
 
 const (
@@ -786,13 +767,14 @@ func (r ReasoningPartParam) MarshalJSON() (data []byte, err error) {
 func (r ReasoningPartParam) implementsMessagePartUnionParam() {}
 
 type Session struct {
-	ID       string       `json:"id,required"`
-	Time     SessionTime  `json:"time,required"`
-	Title    string       `json:"title,required"`
-	Version  string       `json:"version,required"`
-	ParentID string       `json:"parentID"`
-	Share    SessionShare `json:"share"`
-	JSON     sessionJSON  `json:"-"`
+	ID       string        `json:"id,required"`
+	Time     SessionTime   `json:"time,required"`
+	Title    string        `json:"title,required"`
+	Version  string        `json:"version,required"`
+	ParentID string        `json:"parentID"`
+	Revert   SessionRevert `json:"revert"`
+	Share    SessionShare  `json:"share"`
+	JSON     sessionJSON   `json:"-"`
 }
 
 // sessionJSON contains the JSON metadata for the struct [Session]
@@ -802,6 +784,7 @@ type sessionJSON struct {
 	Title       apijson.Field
 	Version     apijson.Field
 	ParentID    apijson.Field
+	Revert      apijson.Field
 	Share       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -834,6 +817,30 @@ func (r *SessionTime) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r sessionTimeJSON) RawJSON() string {
+	return r.raw
+}
+
+type SessionRevert struct {
+	MessageID string            `json:"messageID,required"`
+	Part      float64           `json:"part,required"`
+	Snapshot  string            `json:"snapshot"`
+	JSON      sessionRevertJSON `json:"-"`
+}
+
+// sessionRevertJSON contains the JSON metadata for the struct [SessionRevert]
+type sessionRevertJSON struct {
+	MessageID   apijson.Field
+	Part        apijson.Field
+	Snapshot    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SessionRevert) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r sessionRevertJSON) RawJSON() string {
 	return r.raw
 }
 
