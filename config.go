@@ -58,6 +58,8 @@ type Config struct {
 	// Disable providers that are loaded automatically
 	DisabledProviders []string           `json:"disabled_providers"`
 	Experimental      ConfigExperimental `json:"experimental"`
+	// Additional instruction files or patterns to include
+	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
 	Keybinds Keybinds `json:"keybinds"`
 	// MCP (Model Context Protocol) server configurations
@@ -78,6 +80,7 @@ type configJSON struct {
 	Autoupdate        apijson.Field
 	DisabledProviders apijson.Field
 	Experimental      apijson.Field
+	Instructions      apijson.Field
 	Keybinds          apijson.Field
 	Mcp               apijson.Field
 	Model             apijson.Field
