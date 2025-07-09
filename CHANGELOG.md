@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0-alpha.9 (2025-07-09)
+
+Full Changelog: [v0.1.0-alpha.8...v0.1.0-alpha.9](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.8...v0.1.0-alpha.9)
+
+### Features
+
+* **api:** api update ([3b05d23](https://github.com/sst/opencode-sdk-go/commit/3b05d2399d49bf30c546cea4a501cbaf6af04e31))
+* **api:** manual updates ([dc1723e](https://github.com/sst/opencode-sdk-go/commit/dc1723eb38ae62692872d055b7c4b790a9efc198))
+* **client:** expand max streaming buffer size ([43ce15f](https://github.com/sst/opencode-sdk-go/commit/43ce15ff6517917359b18e0057210413cd29b919))
+
+
+### Chores
+
+* **internal:** fix lint script for tests ([b76aa94](https://github.com/sst/opencode-sdk-go/commit/b76aa94f975056a5ab72937e61ebb40f80632d1a))
+* lint tests ([61cff76](https://github.com/sst/opencode-sdk-go/commit/61cff76ae37742f296d79eb898f55a03efcf8bb4))
+
 ## 0.1.0-alpha.8 (2025-07-02)
 
 Full Changelog: [v0.1.0-alpha.7...v0.1.0-alpha.8](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.7...v0.1.0-alpha.8)
