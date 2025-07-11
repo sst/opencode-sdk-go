@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.10 (2025-07-11)
+
+Full Changelog: [v0.1.0-alpha.9...v0.1.0-alpha.10](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.9...v0.1.0-alpha.10)
+
+### Bug Fixes
+
+* **client:** resolve lint errors in streaming tests ([c0d6eeb](https://github.com/sst/opencode-sdk-go/commit/c0d6eeb1fb32955949dfaaa653de9fddc5e85576))
+
+
+### Chores
+
+* lint tests in subpackages ([39c3a36](https://github.com/sst/opencode-sdk-go/commit/39c3a360302a9a0f992a68655e3a328528f3407b))
+
 ## 0.1.0-alpha.9 (2025-07-09)
 
 Full Changelog: [v0.1.0-alpha.8...v0.1.0-alpha.9](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.8...v0.1.0-alpha.9)
