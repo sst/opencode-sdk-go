@@ -659,13 +659,13 @@ func (r *Part) UnmarshalJSON(data []byte) (err error) {
 // for more type safety.
 //
 // Possible runtime types of the union are [TextPart], [FilePart], [ToolPart],
-// [StepStartPart], [StepFinishPart], [PartObject].
+// [StepStartPart], [StepFinishPart], [SnapshotPart].
 func (r Part) AsUnion() PartUnion {
 	return r.union
 }
 
 // Union satisfied by [TextPart], [FilePart], [ToolPart], [StepStartPart],
-// [StepFinishPart] or [PartObject].
+// [StepFinishPart] or [SnapshotPart].
 type PartUnion interface {
 	implementsPart()
 }
@@ -673,76 +673,38 @@ type PartUnion interface {
 func init() {
 	apijson.RegisterUnion(
 		reflect.TypeOf((*PartUnion)(nil)).Elem(),
-		"",
+		"type",
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(TextPart{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(TextPart{}),
+			DiscriminatorValue: "text",
 		},
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(FilePart{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(FilePart{}),
+			DiscriminatorValue: "file",
 		},
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolPart{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ToolPart{}),
+			DiscriminatorValue: "tool",
 		},
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(StepStartPart{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(StepStartPart{}),
+			DiscriminatorValue: "step-start",
 		},
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(StepFinishPart{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(StepFinishPart{}),
+			DiscriminatorValue: "step-finish",
 		},
 		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(PartObject{}),
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(SnapshotPart{}),
+			DiscriminatorValue: "snapshot",
 		},
 	)
-}
-
-type PartObject struct {
-	ID        string         `json:"id,required"`
-	MessageID string         `json:"messageID,required"`
-	SessionID string         `json:"sessionID,required"`
-	Snapshot  string         `json:"snapshot,required"`
-	Type      PartObjectType `json:"type,required"`
-	JSON      partObjectJSON `json:"-"`
-}
-
-// partObjectJSON contains the JSON metadata for the struct [PartObject]
-type partObjectJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Snapshot    apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PartObject) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partObjectJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r PartObject) implementsPart() {}
-
-type PartObjectType string
-
-const (
-	PartObjectTypeSnapshot PartObjectType = "snapshot"
-)
-
-func (r PartObjectType) IsKnown() bool {
-	switch r {
-	case PartObjectTypeSnapshot:
-		return true
-	}
-	return false
 }
 
 type PartType string
@@ -860,6 +822,50 @@ func (r *SessionShare) UnmarshalJSON(data []byte) (err error) {
 
 func (r sessionShareJSON) RawJSON() string {
 	return r.raw
+}
+
+type SnapshotPart struct {
+	ID        string           `json:"id,required"`
+	MessageID string           `json:"messageID,required"`
+	SessionID string           `json:"sessionID,required"`
+	Snapshot  string           `json:"snapshot,required"`
+	Type      SnapshotPartType `json:"type,required"`
+	JSON      snapshotPartJSON `json:"-"`
+}
+
+// snapshotPartJSON contains the JSON metadata for the struct [SnapshotPart]
+type snapshotPartJSON struct {
+	ID          apijson.Field
+	MessageID   apijson.Field
+	SessionID   apijson.Field
+	Snapshot    apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SnapshotPart) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r snapshotPartJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r SnapshotPart) implementsPart() {}
+
+type SnapshotPartType string
+
+const (
+	SnapshotPartTypeSnapshot SnapshotPartType = "snapshot"
+)
+
+func (r SnapshotPartType) IsKnown() bool {
+	switch r {
+	case SnapshotPartTypeSnapshot:
+		return true
+	}
+	return false
 }
 
 type StepFinishPart struct {
