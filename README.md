@@ -49,14 +49,11 @@ import (
 
 func main() {
 	client := opencode.NewClient()
-	stream := client.Event.ListStreaming(context.TODO())
-	for stream.Next() {
-		fmt.Printf("%+v\n", stream.Current())
-	}
-	err := stream.Err()
+	sessions, err := client.Session.List(context.TODO())
 	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Printf("%+v\n", sessions)
 }
 
 ```
@@ -145,7 +142,7 @@ client := opencode.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Event.List(context.TODO(), ...,
+client.Session.List(context.TODO(), ...,
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -174,14 +171,14 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-stream := client.Event.ListStreaming(context.TODO())
-if stream.Err() != nil {
+_, err := client.Session.List(context.TODO())
+if err != nil {
 	var apierr *opencode.Error
-	if errors.As(stream.Err(), &apierr) {
+	if errors.As(err, &apierr) {
 		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
 		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
 	}
-	panic(stream.Err().Error()) // GET "/event": 400 Bad Request { ... }
+	panic(err.Error()) // GET "/session": 400 Bad Request { ... }
 }
 ```
 
@@ -199,7 +196,7 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Event.ListStreaming(
+client.Session.List(
 	ctx,
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -234,7 +231,7 @@ client := opencode.NewClient(
 )
 
 // Override per-request:
-client.Event.ListStreaming(context.TODO(), option.WithMaxRetries(5))
+client.Session.List(context.TODO(), option.WithMaxRetries(5))
 ```
 
 ### Accessing raw response data (e.g. response headers)
@@ -245,11 +242,11 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-stream := client.Event.ListStreaming(context.TODO(), option.WithResponseInto(&response))
-if stream.Err() != nil {
+sessions, err := client.Session.List(context.TODO(), option.WithResponseInto(&response))
+if err != nil {
 	// handle error
 }
-fmt.Printf("%+v\n", events)
+fmt.Printf("%+v\n", sessions)
 
 fmt.Printf("Status Code: %d\n", response.StatusCode)
 fmt.Printf("Headers: %+#v\n", response.Header)
