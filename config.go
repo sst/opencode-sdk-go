@@ -68,8 +68,9 @@ type Config struct {
 	// Minimum log level to write to log files
 	LogLevel LogLevel `json:"log_level"`
 	// MCP (Model Context Protocol) server configurations
-	Mcp  map[string]ConfigMcp `json:"mcp"`
-	Mode ConfigMode           `json:"mode"`
+	Mcp map[string]ConfigMcp `json:"mcp"`
+	// Modes configuration, see https://opencode.ai/docs/modes
+	Mode ConfigMode `json:"mode"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
 	Model string `json:"model"`
 	// Custom provider configurations and model overrides
@@ -305,6 +306,7 @@ func (r ConfigMcpType) IsKnown() bool {
 	return false
 }
 
+// Modes configuration, see https://opencode.ai/docs/modes
 type ConfigMode struct {
 	Build       Mode            `json:"build"`
 	Plan        Mode            `json:"plan"`
