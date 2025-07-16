@@ -40,14 +40,6 @@ func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (
 	return
 }
 
-// List all providers
-func (r *ConfigService) Providers(ctx context.Context, opts ...option.RequestOption) (res *ConfigProvidersResponse, err error) {
-	opts = append(r.Options[:], opts...)
-	path := "config/providers"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
 type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema"`
@@ -62,9 +54,9 @@ type Config struct {
 	// Additional instruction files or patterns to include
 	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
-	Keybinds Keybinds `json:"keybinds"`
+	Keybinds KeybindsConfig `json:"keybinds"`
 	// Layout to use for the TUI
-	Layout ConfigLayout `json:"layout"`
+	Layout LayoutConfig `json:"layout"`
 	// Minimum log level to write to log files
 	LogLevel LogLevel `json:"log_level"`
 	// MCP (Model Context Protocol) server configurations
@@ -205,22 +197,6 @@ func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
 	return r.raw
 }
 
-// Layout to use for the TUI
-type ConfigLayout string
-
-const (
-	ConfigLayoutAuto    ConfigLayout = "auto"
-	ConfigLayoutStretch ConfigLayout = "stretch"
-)
-
-func (r ConfigLayout) IsKnown() bool {
-	switch r {
-	case ConfigLayoutAuto, ConfigLayoutStretch:
-		return true
-	}
-	return false
-}
-
 type ConfigMcp struct {
 	// Type of MCP server connection
 	Type ConfigMcpType `json:"type,required"`
@@ -263,12 +239,12 @@ func (r *ConfigMcp) UnmarshalJSON(data []byte) (err error) {
 // AsUnion returns a [ConfigMcpUnion] interface which you can cast to the specific
 // types for more type safety.
 //
-// Possible runtime types of the union are [McpLocal], [McpRemote].
+// Possible runtime types of the union are [McpLocalConfig], [McpRemoteConfig].
 func (r ConfigMcp) AsUnion() ConfigMcpUnion {
 	return r.union
 }
 
-// Union satisfied by [McpLocal] or [McpRemote].
+// Union satisfied by [McpLocalConfig] or [McpRemoteConfig].
 type ConfigMcpUnion interface {
 	implementsConfigMcp()
 }
@@ -279,12 +255,12 @@ func init() {
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(McpLocal{}),
+			Type:               reflect.TypeOf(McpLocalConfig{}),
 			DiscriminatorValue: "local",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(McpRemote{}),
+			Type:               reflect.TypeOf(McpRemoteConfig{}),
 			DiscriminatorValue: "remote",
 		},
 	)
@@ -308,10 +284,10 @@ func (r ConfigMcpType) IsKnown() bool {
 
 // Modes configuration, see https://opencode.ai/docs/modes
 type ConfigMode struct {
-	Build       Mode            `json:"build"`
-	Plan        Mode            `json:"plan"`
-	ExtraFields map[string]Mode `json:"-,extras"`
-	JSON        configModeJSON  `json:"-"`
+	Build       ModeConfig            `json:"build"`
+	Plan        ModeConfig            `json:"plan"`
+	ExtraFields map[string]ModeConfig `json:"-,extras"`
+	JSON        configModeJSON        `json:"-"`
 }
 
 // configModeJSON contains the JSON metadata for the struct [ConfigMode]
@@ -468,7 +444,7 @@ func (r ConfigShare) IsKnown() bool {
 	return false
 }
 
-type Keybinds struct {
+type KeybindsConfig struct {
 	// Exit the application
 	AppExit string `json:"app_exit,required"`
 	// Show help dialog
@@ -538,12 +514,12 @@ type Keybinds struct {
 	// List available themes
 	ThemeList string `json:"theme_list,required"`
 	// Toggle tool details
-	ToolDetails string       `json:"tool_details,required"`
-	JSON        keybindsJSON `json:"-"`
+	ToolDetails string             `json:"tool_details,required"`
+	JSON        keybindsConfigJSON `json:"-"`
 }
 
-// keybindsJSON contains the JSON metadata for the struct [Keybinds]
-type keybindsJSON struct {
+// keybindsConfigJSON contains the JSON metadata for the struct [KeybindsConfig]
+type keybindsConfigJSON struct {
 	AppExit              apijson.Field
 	AppHelp              apijson.Field
 	EditorOpen           apijson.Field
@@ -583,28 +559,43 @@ type keybindsJSON struct {
 	ExtraFields          map[string]apijson.Field
 }
 
-func (r *Keybinds) UnmarshalJSON(data []byte) (err error) {
+func (r *KeybindsConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r keybindsJSON) RawJSON() string {
+func (r keybindsConfigJSON) RawJSON() string {
 	return r.raw
 }
 
-type McpLocal struct {
+type LayoutConfig string
+
+const (
+	LayoutConfigAuto    LayoutConfig = "auto"
+	LayoutConfigStretch LayoutConfig = "stretch"
+)
+
+func (r LayoutConfig) IsKnown() bool {
+	switch r {
+	case LayoutConfigAuto, LayoutConfigStretch:
+		return true
+	}
+	return false
+}
+
+type McpLocalConfig struct {
 	// Command and arguments to run the MCP server
 	Command []string `json:"command,required"`
 	// Type of MCP server connection
-	Type McpLocalType `json:"type,required"`
+	Type McpLocalConfigType `json:"type,required"`
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
-	Environment map[string]string `json:"environment"`
-	JSON        mcpLocalJSON      `json:"-"`
+	Environment map[string]string  `json:"environment"`
+	JSON        mcpLocalConfigJSON `json:"-"`
 }
 
-// mcpLocalJSON contains the JSON metadata for the struct [McpLocal]
-type mcpLocalJSON struct {
+// mcpLocalConfigJSON contains the JSON metadata for the struct [McpLocalConfig]
+type mcpLocalConfigJSON struct {
 	Command     apijson.Field
 	Type        apijson.Field
 	Enabled     apijson.Field
@@ -613,43 +604,43 @@ type mcpLocalJSON struct {
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *McpLocal) UnmarshalJSON(data []byte) (err error) {
+func (r *McpLocalConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r mcpLocalJSON) RawJSON() string {
+func (r mcpLocalConfigJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r McpLocal) implementsConfigMcp() {}
+func (r McpLocalConfig) implementsConfigMcp() {}
 
 // Type of MCP server connection
-type McpLocalType string
+type McpLocalConfigType string
 
 const (
-	McpLocalTypeLocal McpLocalType = "local"
+	McpLocalConfigTypeLocal McpLocalConfigType = "local"
 )
 
-func (r McpLocalType) IsKnown() bool {
+func (r McpLocalConfigType) IsKnown() bool {
 	switch r {
-	case McpLocalTypeLocal:
+	case McpLocalConfigTypeLocal:
 		return true
 	}
 	return false
 }
 
-type McpRemote struct {
+type McpRemoteConfig struct {
 	// Type of MCP server connection
-	Type McpRemoteType `json:"type,required"`
+	Type McpRemoteConfigType `json:"type,required"`
 	// URL of the remote MCP server
 	URL string `json:"url,required"`
 	// Enable or disable the MCP server on startup
-	Enabled bool          `json:"enabled"`
-	JSON    mcpRemoteJSON `json:"-"`
+	Enabled bool                `json:"enabled"`
+	JSON    mcpRemoteConfigJSON `json:"-"`
 }
 
-// mcpRemoteJSON contains the JSON metadata for the struct [McpRemote]
-type mcpRemoteJSON struct {
+// mcpRemoteConfigJSON contains the JSON metadata for the struct [McpRemoteConfig]
+type mcpRemoteConfigJSON struct {
 	Type        apijson.Field
 	URL         apijson.Field
 	Enabled     apijson.Field
@@ -657,40 +648,40 @@ type mcpRemoteJSON struct {
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *McpRemote) UnmarshalJSON(data []byte) (err error) {
+func (r *McpRemoteConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r mcpRemoteJSON) RawJSON() string {
+func (r mcpRemoteConfigJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r McpRemote) implementsConfigMcp() {}
+func (r McpRemoteConfig) implementsConfigMcp() {}
 
 // Type of MCP server connection
-type McpRemoteType string
+type McpRemoteConfigType string
 
 const (
-	McpRemoteTypeRemote McpRemoteType = "remote"
+	McpRemoteConfigTypeRemote McpRemoteConfigType = "remote"
 )
 
-func (r McpRemoteType) IsKnown() bool {
+func (r McpRemoteConfigType) IsKnown() bool {
 	switch r {
-	case McpRemoteTypeRemote:
+	case McpRemoteConfigTypeRemote:
 		return true
 	}
 	return false
 }
 
-type Mode struct {
+type ModeConfig struct {
 	Model  string          `json:"model"`
 	Prompt string          `json:"prompt"`
 	Tools  map[string]bool `json:"tools"`
-	JSON   modeJSON        `json:"-"`
+	JSON   modeConfigJSON  `json:"-"`
 }
 
-// modeJSON contains the JSON metadata for the struct [Mode]
-type modeJSON struct {
+// modeConfigJSON contains the JSON metadata for the struct [ModeConfig]
+type modeConfigJSON struct {
 	Model       apijson.Field
 	Prompt      apijson.Field
 	Tools       apijson.Field
@@ -698,149 +689,10 @@ type modeJSON struct {
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *Mode) UnmarshalJSON(data []byte) (err error) {
+func (r *ModeConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r modeJSON) RawJSON() string {
-	return r.raw
-}
-
-type Model struct {
-	ID          string                 `json:"id,required"`
-	Attachment  bool                   `json:"attachment,required"`
-	Cost        ModelCost              `json:"cost,required"`
-	Limit       ModelLimit             `json:"limit,required"`
-	Name        string                 `json:"name,required"`
-	Options     map[string]interface{} `json:"options,required"`
-	Reasoning   bool                   `json:"reasoning,required"`
-	ReleaseDate string                 `json:"release_date,required"`
-	Temperature bool                   `json:"temperature,required"`
-	ToolCall    bool                   `json:"tool_call,required"`
-	JSON        modelJSON              `json:"-"`
-}
-
-// modelJSON contains the JSON metadata for the struct [Model]
-type modelJSON struct {
-	ID          apijson.Field
-	Attachment  apijson.Field
-	Cost        apijson.Field
-	Limit       apijson.Field
-	Name        apijson.Field
-	Options     apijson.Field
-	Reasoning   apijson.Field
-	ReleaseDate apijson.Field
-	Temperature apijson.Field
-	ToolCall    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Model) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelJSON) RawJSON() string {
-	return r.raw
-}
-
-type ModelCost struct {
-	Input      float64       `json:"input,required"`
-	Output     float64       `json:"output,required"`
-	CacheRead  float64       `json:"cache_read"`
-	CacheWrite float64       `json:"cache_write"`
-	JSON       modelCostJSON `json:"-"`
-}
-
-// modelCostJSON contains the JSON metadata for the struct [ModelCost]
-type modelCostJSON struct {
-	Input       apijson.Field
-	Output      apijson.Field
-	CacheRead   apijson.Field
-	CacheWrite  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ModelCost) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelCostJSON) RawJSON() string {
-	return r.raw
-}
-
-type ModelLimit struct {
-	Context float64        `json:"context,required"`
-	Output  float64        `json:"output,required"`
-	JSON    modelLimitJSON `json:"-"`
-}
-
-// modelLimitJSON contains the JSON metadata for the struct [ModelLimit]
-type modelLimitJSON struct {
-	Context     apijson.Field
-	Output      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ModelLimit) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelLimitJSON) RawJSON() string {
-	return r.raw
-}
-
-type Provider struct {
-	ID     string           `json:"id,required"`
-	Env    []string         `json:"env,required"`
-	Models map[string]Model `json:"models,required"`
-	Name   string           `json:"name,required"`
-	API    string           `json:"api"`
-	Npm    string           `json:"npm"`
-	JSON   providerJSON     `json:"-"`
-}
-
-// providerJSON contains the JSON metadata for the struct [Provider]
-type providerJSON struct {
-	ID          apijson.Field
-	Env         apijson.Field
-	Models      apijson.Field
-	Name        apijson.Field
-	API         apijson.Field
-	Npm         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Provider) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r providerJSON) RawJSON() string {
-	return r.raw
-}
-
-type ConfigProvidersResponse struct {
-	Default   map[string]string           `json:"default,required"`
-	Providers []Provider                  `json:"providers,required"`
-	JSON      configProvidersResponseJSON `json:"-"`
-}
-
-// configProvidersResponseJSON contains the JSON metadata for the struct
-// [ConfigProvidersResponse]
-type configProvidersResponseJSON struct {
-	Default     apijson.Field
-	Providers   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigProvidersResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configProvidersResponseJSON) RawJSON() string {
+func (r modeConfigJSON) RawJSON() string {
 	return r.raw
 }
