@@ -63,6 +63,8 @@ type Config struct {
 	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
 	Keybinds Keybinds `json:"keybinds"`
+	// Layout to use for the TUI
+	Layout ConfigLayout `json:"layout"`
 	// Minimum log level to write to log files
 	LogLevel LogLevel `json:"log_level"`
 	// MCP (Model Context Protocol) server configurations
@@ -91,6 +93,7 @@ type configJSON struct {
 	Experimental      apijson.Field
 	Instructions      apijson.Field
 	Keybinds          apijson.Field
+	Layout            apijson.Field
 	LogLevel          apijson.Field
 	Mcp               apijson.Field
 	Mode              apijson.Field
@@ -201,6 +204,22 @@ func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
 	return r.raw
 }
 
+// Layout to use for the TUI
+type ConfigLayout string
+
+const (
+	ConfigLayoutAuto    ConfigLayout = "auto"
+	ConfigLayoutStretch ConfigLayout = "stretch"
+)
+
+func (r ConfigLayout) IsKnown() bool {
+	switch r {
+	case ConfigLayoutAuto, ConfigLayoutStretch:
+		return true
+	}
+	return false
+}
+
 type ConfigMcp struct {
 	// Type of MCP server connection
 	Type ConfigMcpType `json:"type,required"`
@@ -287,10 +306,10 @@ func (r ConfigMcpType) IsKnown() bool {
 }
 
 type ConfigMode struct {
-	Build       ConfigModeBuild       `json:"build"`
-	Plan        ConfigModePlan        `json:"plan"`
-	ExtraFields map[string]ConfigMode `json:"-,extras"`
-	JSON        configModeJSON        `json:"-"`
+	Build       Mode            `json:"build"`
+	Plan        Mode            `json:"plan"`
+	ExtraFields map[string]Mode `json:"-,extras"`
+	JSON        configModeJSON  `json:"-"`
 }
 
 // configModeJSON contains the JSON metadata for the struct [ConfigMode]
@@ -306,54 +325,6 @@ func (r *ConfigMode) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r configModeJSON) RawJSON() string {
-	return r.raw
-}
-
-type ConfigModeBuild struct {
-	Model  string              `json:"model"`
-	Prompt string              `json:"prompt"`
-	Tools  map[string]bool     `json:"tools"`
-	JSON   configModeBuildJSON `json:"-"`
-}
-
-// configModeBuildJSON contains the JSON metadata for the struct [ConfigModeBuild]
-type configModeBuildJSON struct {
-	Model       apijson.Field
-	Prompt      apijson.Field
-	Tools       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigModeBuild) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configModeBuildJSON) RawJSON() string {
-	return r.raw
-}
-
-type ConfigModePlan struct {
-	Model  string             `json:"model"`
-	Prompt string             `json:"prompt"`
-	Tools  map[string]bool    `json:"tools"`
-	JSON   configModePlanJSON `json:"-"`
-}
-
-// configModePlanJSON contains the JSON metadata for the struct [ConfigModePlan]
-type configModePlanJSON struct {
-	Model       apijson.Field
-	Prompt      apijson.Field
-	Tools       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigModePlan) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configModePlanJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -548,6 +519,8 @@ type Keybinds struct {
 	ProjectInit string `json:"project_init,required"`
 	// Compact the session
 	SessionCompact string `json:"session_compact,required"`
+	// Export session to editor
+	SessionExport string `json:"session_export,required"`
 	// Interrupt current session
 	SessionInterrupt string `json:"session_interrupt,required"`
 	// List all sessions
@@ -595,6 +568,7 @@ type keybindsJSON struct {
 	ModelList            apijson.Field
 	ProjectInit          apijson.Field
 	SessionCompact       apijson.Field
+	SessionExport        apijson.Field
 	SessionInterrupt     apijson.Field
 	SessionList          apijson.Field
 	SessionNew           apijson.Field
@@ -704,6 +678,30 @@ func (r McpRemoteType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type Mode struct {
+	Model  string          `json:"model"`
+	Prompt string          `json:"prompt"`
+	Tools  map[string]bool `json:"tools"`
+	JSON   modeJSON        `json:"-"`
+}
+
+// modeJSON contains the JSON metadata for the struct [Mode]
+type modeJSON struct {
+	Model       apijson.Field
+	Prompt      apijson.Field
+	Tools       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *Mode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r modeJSON) RawJSON() string {
+	return r.raw
 }
 
 type Model struct {
