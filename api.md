@@ -75,11 +75,6 @@ Methods:
 
 # Session
 
-Params Types:
-
-- <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#FilePartParam">FilePartParam</a>
-- <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#TextPartParam">TextPartParam</a>
-
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#AssistantMessage">AssistantMessage</a>
