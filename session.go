@@ -1601,7 +1601,6 @@ type SessionChatParams struct {
 	ModelID    param.Field[string]                       `json:"modelID,required"`
 	Parts      param.Field[[]SessionChatParamsPartUnion] `json:"parts,required"`
 	ProviderID param.Field[string]                       `json:"providerID,required"`
-	SessionID  param.Field[string]                       `json:"sessionID,required"`
 	MessageID  param.Field[string]                       `json:"messageID"`
 	Mode       param.Field[string]                       `json:"mode"`
 }

@@ -129,7 +129,6 @@ func TestSessionChatWithOptionalParams(t *testing.T) {
 				}),
 			}}),
 			ProviderID: opencode.F("providerID"),
-			SessionID:  opencode.F("ses"),
 			MessageID:  opencode.F("msg"),
 			Mode:       opencode.F("mode"),
 		},
