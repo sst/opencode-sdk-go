@@ -101,7 +101,7 @@ func TestSessionAbort(t *testing.T) {
 	}
 }
 
-func TestSessionChat(t *testing.T) {
+func TestSessionChatWithOptionalParams(t *testing.T) {
 	t.Skip("skipped: tests are disabled for the time being")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -117,19 +117,21 @@ func TestSessionChat(t *testing.T) {
 		context.TODO(),
 		"id",
 		opencode.SessionChatParams{
-			MessageID: opencode.F("messageID"),
-			Mode:      opencode.F("mode"),
-			ModelID:   opencode.F("modelID"),
-			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.FilePartParam{
+			ModelID: opencode.F("modelID"),
+			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.SessionChatParamsPartsObject{
+				Text:      opencode.F("text"),
+				Type:      opencode.F(opencode.SessionChatParamsPartsObjectTypeText),
 				ID:        opencode.F("id"),
-				MessageID: opencode.F("messageID"),
-				Mime:      opencode.F("mime"),
-				SessionID: opencode.F("sessionID"),
-				Type:      opencode.F(opencode.FilePartTypeFile),
-				URL:       opencode.F("url"),
-				Filename:  opencode.F("filename"),
+				Synthetic: opencode.F(true),
+				Time: opencode.F(opencode.SessionChatParamsPartsObjectTime{
+					Start: opencode.F(0.000000),
+					End:   opencode.F(0.000000),
+				}),
 			}}),
 			ProviderID: opencode.F("providerID"),
+			SessionID:  opencode.F("ses"),
+			MessageID:  opencode.F("msg"),
+			Mode:       opencode.F("mode"),
 		},
 	)
 	if err != nil {

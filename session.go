@@ -481,22 +481,6 @@ func (r FilePartType) IsKnown() bool {
 	return false
 }
 
-type FilePartParam struct {
-	ID        param.Field[string]       `json:"id,required"`
-	MessageID param.Field[string]       `json:"messageID,required"`
-	Mime      param.Field[string]       `json:"mime,required"`
-	SessionID param.Field[string]       `json:"sessionID,required"`
-	Type      param.Field[FilePartType] `json:"type,required"`
-	URL       param.Field[string]       `json:"url,required"`
-	Filename  param.Field[string]       `json:"filename"`
-}
-
-func (r FilePartParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r FilePartParam) implementsSessionChatParamsPartUnion() {}
-
 type Message struct {
 	ID        string      `json:"id,required"`
 	Role      MessageRole `json:"role,required"`
@@ -1076,31 +1060,6 @@ func (r textPartTimeJSON) RawJSON() string {
 	return r.raw
 }
 
-type TextPartParam struct {
-	ID        param.Field[string]            `json:"id,required"`
-	MessageID param.Field[string]            `json:"messageID,required"`
-	SessionID param.Field[string]            `json:"sessionID,required"`
-	Text      param.Field[string]            `json:"text,required"`
-	Type      param.Field[TextPartType]      `json:"type,required"`
-	Synthetic param.Field[bool]              `json:"synthetic"`
-	Time      param.Field[TextPartTimeParam] `json:"time"`
-}
-
-func (r TextPartParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r TextPartParam) implementsSessionChatParamsPartUnion() {}
-
-type TextPartTimeParam struct {
-	Start param.Field[float64] `json:"start,required"`
-	End   param.Field[float64] `json:"end"`
-}
-
-func (r TextPartTimeParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type ToolPart struct {
 	ID        string        `json:"id,required"`
 	CallID    string        `json:"callID,required"`
@@ -1574,11 +1533,12 @@ func (r sessionMessagesResponseJSON) RawJSON() string {
 }
 
 type SessionChatParams struct {
-	MessageID  param.Field[string]                       `json:"messageID,required"`
-	Mode       param.Field[string]                       `json:"mode,required"`
 	ModelID    param.Field[string]                       `json:"modelID,required"`
 	Parts      param.Field[[]SessionChatParamsPartUnion] `json:"parts,required"`
 	ProviderID param.Field[string]                       `json:"providerID,required"`
+	SessionID  param.Field[string]                       `json:"sessionID,required"`
+	MessageID  param.Field[string]                       `json:"messageID"`
+	Mode       param.Field[string]                       `json:"mode"`
 }
 
 func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
@@ -1586,10 +1546,8 @@ func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
 }
 
 type SessionChatParamsPart struct {
-	ID        param.Field[string]                     `json:"id,required"`
-	MessageID param.Field[string]                     `json:"messageID,required"`
-	SessionID param.Field[string]                     `json:"sessionID,required"`
 	Type      param.Field[SessionChatParamsPartsType] `json:"type,required"`
+	ID        param.Field[string]                     `json:"id"`
 	Filename  param.Field[string]                     `json:"filename"`
 	Mime      param.Field[string]                     `json:"mime"`
 	Synthetic param.Field[bool]                       `json:"synthetic"`
@@ -1604,21 +1562,59 @@ func (r SessionChatParamsPart) MarshalJSON() (data []byte, err error) {
 
 func (r SessionChatParamsPart) implementsSessionChatParamsPartUnion() {}
 
-// Satisfied by [FilePartParam], [TextPartParam], [SessionChatParamsPart].
+// Satisfied by [SessionChatParamsPartsObject], [SessionChatParamsPartsObject],
+// [SessionChatParamsPart].
 type SessionChatParamsPartUnion interface {
 	implementsSessionChatParamsPartUnion()
+}
+
+type SessionChatParamsPartsObject struct {
+	Text      param.Field[string]                           `json:"text,required"`
+	Type      param.Field[SessionChatParamsPartsObjectType] `json:"type,required"`
+	ID        param.Field[string]                           `json:"id"`
+	Synthetic param.Field[bool]                             `json:"synthetic"`
+	Time      param.Field[SessionChatParamsPartsObjectTime] `json:"time"`
+}
+
+func (r SessionChatParamsPartsObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r SessionChatParamsPartsObject) implementsSessionChatParamsPartUnion() {}
+
+type SessionChatParamsPartsObjectType string
+
+const (
+	SessionChatParamsPartsObjectTypeText SessionChatParamsPartsObjectType = "text"
+)
+
+func (r SessionChatParamsPartsObjectType) IsKnown() bool {
+	switch r {
+	case SessionChatParamsPartsObjectTypeText:
+		return true
+	}
+	return false
+}
+
+type SessionChatParamsPartsObjectTime struct {
+	Start param.Field[float64] `json:"start,required"`
+	End   param.Field[float64] `json:"end"`
+}
+
+func (r SessionChatParamsPartsObjectTime) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type SessionChatParamsPartsType string
 
 const (
-	SessionChatParamsPartsTypeFile SessionChatParamsPartsType = "file"
 	SessionChatParamsPartsTypeText SessionChatParamsPartsType = "text"
+	SessionChatParamsPartsTypeFile SessionChatParamsPartsType = "file"
 )
 
 func (r SessionChatParamsPartsType) IsKnown() bool {
 	switch r {
-	case SessionChatParamsPartsTypeFile, SessionChatParamsPartsTypeText:
+	case SessionChatParamsPartsTypeText, SessionChatParamsPartsTypeFile:
 		return true
 	}
 	return false
