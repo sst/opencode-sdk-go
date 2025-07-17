@@ -118,12 +118,12 @@ func TestSessionChatWithOptionalParams(t *testing.T) {
 		"id",
 		opencode.SessionChatParams{
 			ModelID: opencode.F("modelID"),
-			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.SessionChatParamsPartsObject{
+			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.TextPartInputParam{
 				Text:      opencode.F("text"),
-				Type:      opencode.F(opencode.SessionChatParamsPartsObjectTypeText),
+				Type:      opencode.F(opencode.TextPartInputTypeText),
 				ID:        opencode.F("id"),
 				Synthetic: opencode.F(true),
-				Time: opencode.F(opencode.SessionChatParamsPartsObjectTime{
+				Time: opencode.F(opencode.TextPartInputTimeParam{
 					Start: opencode.F(0.000000),
 					End:   opencode.F(0.000000),
 				}),
