@@ -67,8 +67,8 @@ type Config struct {
 	Model string `json:"model"`
 	// Custom provider configurations and model overrides
 	Provider map[string]ConfigProvider `json:"provider"`
-	// Control sharing behavior: 'auto' enables automatic sharing, 'disabled' disables
-	// all sharing
+	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
+	// enables automatic sharing, 'disabled' disables all sharing
 	Share ConfigShare `json:"share"`
 	// Theme name to use for the interface
 	Theme string `json:"theme"`
@@ -206,6 +206,8 @@ type ConfigMcp struct {
 	Enabled bool `json:"enabled"`
 	// This field can have the runtime type of [map[string]string].
 	Environment interface{} `json:"environment"`
+	// This field can have the runtime type of [map[string]string].
+	Headers interface{} `json:"headers"`
 	// URL of the remote MCP server
 	URL   string        `json:"url"`
 	JSON  configMcpJSON `json:"-"`
@@ -218,6 +220,7 @@ type configMcpJSON struct {
 	Command     apijson.Field
 	Enabled     apijson.Field
 	Environment apijson.Field
+	Headers     apijson.Field
 	URL         apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -427,18 +430,19 @@ func (r configProviderModelsLimitJSON) RawJSON() string {
 	return r.raw
 }
 
-// Control sharing behavior: 'auto' enables automatic sharing, 'disabled' disables
-// all sharing
+// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
+// enables automatic sharing, 'disabled' disables all sharing
 type ConfigShare string
 
 const (
+	ConfigShareManual   ConfigShare = "manual"
 	ConfigShareAuto     ConfigShare = "auto"
 	ConfigShareDisabled ConfigShare = "disabled"
 )
 
 func (r ConfigShare) IsKnown() bool {
 	switch r {
-	case ConfigShareAuto, ConfigShareDisabled:
+	case ConfigShareManual, ConfigShareAuto, ConfigShareDisabled:
 		return true
 	}
 	return false
@@ -509,8 +513,10 @@ type KeybindsConfig struct {
 	SessionShare string `json:"session_share,required"`
 	// Unshare current session
 	SessionUnshare string `json:"session_unshare,required"`
-	// Switch mode
+	// Next mode
 	SwitchMode string `json:"switch_mode,required"`
+	// Previous Mode
+	SwitchModeReverse string `json:"switch_mode_reverse,required"`
 	// List available themes
 	ThemeList string `json:"theme_list,required"`
 	// Toggle tool details
@@ -553,6 +559,7 @@ type keybindsConfigJSON struct {
 	SessionShare         apijson.Field
 	SessionUnshare       apijson.Field
 	SwitchMode           apijson.Field
+	SwitchModeReverse    apijson.Field
 	ThemeList            apijson.Field
 	ToolDetails          apijson.Field
 	raw                  string
@@ -635,7 +642,9 @@ type McpRemoteConfig struct {
 	// URL of the remote MCP server
 	URL string `json:"url,required"`
 	// Enable or disable the MCP server on startup
-	Enabled bool                `json:"enabled"`
+	Enabled bool `json:"enabled"`
+	// Headers to send with the request
+	Headers map[string]string   `json:"headers"`
 	JSON    mcpRemoteConfigJSON `json:"-"`
 }
 
@@ -644,6 +653,7 @@ type mcpRemoteConfigJSON struct {
 	Type        apijson.Field
 	URL         apijson.Field
 	Enabled     apijson.Field
+	Headers     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
