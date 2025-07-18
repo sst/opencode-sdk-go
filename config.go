@@ -55,8 +55,8 @@ type Config struct {
 	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
 	Keybinds KeybindsConfig `json:"keybinds"`
-	// Layout to use for the TUI
-	Layout LayoutConfig `json:"layout"`
+	// @deprecated Always uses stretch layout.
+	Layout ConfigLayout `json:"layout"`
 	// Minimum log level to write to log files
 	LogLevel LogLevel `json:"log_level"`
 	// MCP (Model Context Protocol) server configurations
@@ -195,6 +195,22 @@ func (r *ConfigExperimentalHookSessionCompleted) UnmarshalJSON(data []byte) (err
 
 func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
 	return r.raw
+}
+
+// @deprecated Always uses stretch layout.
+type ConfigLayout string
+
+const (
+	ConfigLayoutAuto    ConfigLayout = "auto"
+	ConfigLayoutStretch ConfigLayout = "stretch"
+)
+
+func (r ConfigLayout) IsKnown() bool {
+	switch r {
+	case ConfigLayoutAuto, ConfigLayoutStretch:
+		return true
+	}
+	return false
 }
 
 type ConfigMcp struct {
@@ -572,21 +588,6 @@ func (r *KeybindsConfig) UnmarshalJSON(data []byte) (err error) {
 
 func (r keybindsConfigJSON) RawJSON() string {
 	return r.raw
-}
-
-type LayoutConfig string
-
-const (
-	LayoutConfigAuto    LayoutConfig = "auto"
-	LayoutConfigStretch LayoutConfig = "stretch"
-)
-
-func (r LayoutConfig) IsKnown() bool {
-	switch r {
-	case LayoutConfigAuto, LayoutConfigStretch:
-		return true
-	}
-	return false
 }
 
 type McpLocalConfig struct {
