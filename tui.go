@@ -31,6 +31,14 @@ func NewTuiService(opts ...option.RequestOption) (r *TuiService) {
 	return
 }
 
+// Open the help dialog
+func (r *TuiService) OpenHelp(ctx context.Context, opts ...option.RequestOption) (res *bool, err error) {
+	opts = append(r.Options[:], opts...)
+	path := "tui/open-help"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
+	return
+}
+
 // Send a prompt to the TUI
 func (r *TuiService) Prompt(ctx context.Context, body TuiPromptParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = append(r.Options[:], opts...)
