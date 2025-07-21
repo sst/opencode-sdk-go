@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 )
@@ -30,9 +32,18 @@ func NewTuiService(opts ...option.RequestOption) (r *TuiService) {
 }
 
 // Send a prompt to the TUI
-func (r *TuiService) Prompt(ctx context.Context, opts ...option.RequestOption) (res *bool, err error) {
+func (r *TuiService) Prompt(ctx context.Context, body TuiPromptParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "tui/prompt"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
+}
+
+type TuiPromptParams struct {
+	Parts param.Field[[]PartUnionParam] `json:"parts,required"`
+	Text  param.Field[string]           `json:"text,required"`
+}
+
+func (r TuiPromptParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
