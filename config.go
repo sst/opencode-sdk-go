@@ -57,8 +57,6 @@ type Config struct {
 	Keybinds KeybindsConfig `json:"keybinds"`
 	// @deprecated Always uses stretch layout.
 	Layout ConfigLayout `json:"layout"`
-	// Minimum log level to write to log files
-	LogLevel LogLevel `json:"log_level"`
 	// MCP (Model Context Protocol) server configurations
 	Mcp map[string]ConfigMcp `json:"mcp"`
 	// Modes configuration, see https://opencode.ai/docs/modes
@@ -70,6 +68,9 @@ type Config struct {
 	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
 	// enables automatic sharing, 'disabled' disables all sharing
 	Share ConfigShare `json:"share"`
+	// Small model to use for tasks like summarization and title generation in the
+	// format of provider/model
+	SmallModel string `json:"small_model"`
 	// Theme name to use for the interface
 	Theme string `json:"theme"`
 	// Custom username to display in conversations instead of system username
@@ -87,12 +88,12 @@ type configJSON struct {
 	Instructions      apijson.Field
 	Keybinds          apijson.Field
 	Layout            apijson.Field
-	LogLevel          apijson.Field
 	Mcp               apijson.Field
 	Mode              apijson.Field
 	Model             apijson.Field
 	Provider          apijson.Field
 	Share             apijson.Field
+	SmallModel        apijson.Field
 	Theme             apijson.Field
 	Username          apijson.Field
 	raw               string

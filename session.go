@@ -434,14 +434,15 @@ func (r AssistantMessageErrorName) IsKnown() bool {
 }
 
 type FilePart struct {
-	ID        string       `json:"id,required"`
-	MessageID string       `json:"messageID,required"`
-	Mime      string       `json:"mime,required"`
-	SessionID string       `json:"sessionID,required"`
-	Type      FilePartType `json:"type,required"`
-	URL       string       `json:"url,required"`
-	Filename  string       `json:"filename"`
-	JSON      filePartJSON `json:"-"`
+	ID        string         `json:"id,required"`
+	MessageID string         `json:"messageID,required"`
+	Mime      string         `json:"mime,required"`
+	SessionID string         `json:"sessionID,required"`
+	Type      FilePartType   `json:"type,required"`
+	URL       string         `json:"url,required"`
+	Filename  string         `json:"filename"`
+	Source    FilePartSource `json:"source"`
+	JSON      filePartJSON   `json:"-"`
 }
 
 // filePartJSON contains the JSON metadata for the struct [FilePart]
@@ -453,6 +454,7 @@ type filePartJSON struct {
 	Type        apijson.Field
 	URL         apijson.Field
 	Filename    apijson.Field
+	Source      apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -482,11 +484,12 @@ func (r FilePartType) IsKnown() bool {
 }
 
 type FilePartInputParam struct {
-	Mime     param.Field[string]            `json:"mime,required"`
-	Type     param.Field[FilePartInputType] `json:"type,required"`
-	URL      param.Field[string]            `json:"url,required"`
-	ID       param.Field[string]            `json:"id"`
-	Filename param.Field[string]            `json:"filename"`
+	Mime     param.Field[string]                   `json:"mime,required"`
+	Type     param.Field[FilePartInputType]        `json:"type,required"`
+	URL      param.Field[string]                   `json:"url,required"`
+	ID       param.Field[string]                   `json:"id"`
+	Filename param.Field[string]                   `json:"filename"`
+	Source   param.Field[FilePartSourceUnionParam] `json:"source"`
 }
 
 func (r FilePartInputParam) MarshalJSON() (data []byte, err error) {
@@ -508,6 +511,195 @@ func (r FilePartInputType) IsKnown() bool {
 	}
 	return false
 }
+
+type FilePartSource struct {
+	Path string             `json:"path,required"`
+	Text FilePartSourceText `json:"text,required"`
+	Type FilePartSourceType `json:"type,required"`
+	Kind int64              `json:"kind"`
+	Name string             `json:"name"`
+	// This field can have the runtime type of [SymbolSourceRange].
+	Range interface{}        `json:"range"`
+	JSON  filePartSourceJSON `json:"-"`
+	union FilePartSourceUnion
+}
+
+// filePartSourceJSON contains the JSON metadata for the struct [FilePartSource]
+type filePartSourceJSON struct {
+	Path        apijson.Field
+	Text        apijson.Field
+	Type        apijson.Field
+	Kind        apijson.Field
+	Name        apijson.Field
+	Range       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r filePartSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *FilePartSource) UnmarshalJSON(data []byte) (err error) {
+	*r = FilePartSource{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [FilePartSourceUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [FileSource], [SymbolSource].
+func (r FilePartSource) AsUnion() FilePartSourceUnion {
+	return r.union
+}
+
+// Union satisfied by [FileSource] or [SymbolSource].
+type FilePartSourceUnion interface {
+	implementsFilePartSource()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FilePartSourceUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(FileSource{}),
+			DiscriminatorValue: "file",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(SymbolSource{}),
+			DiscriminatorValue: "symbol",
+		},
+	)
+}
+
+type FilePartSourceType string
+
+const (
+	FilePartSourceTypeFile   FilePartSourceType = "file"
+	FilePartSourceTypeSymbol FilePartSourceType = "symbol"
+)
+
+func (r FilePartSourceType) IsKnown() bool {
+	switch r {
+	case FilePartSourceTypeFile, FilePartSourceTypeSymbol:
+		return true
+	}
+	return false
+}
+
+type FilePartSourceParam struct {
+	Path  param.Field[string]                  `json:"path,required"`
+	Text  param.Field[FilePartSourceTextParam] `json:"text,required"`
+	Type  param.Field[FilePartSourceType]      `json:"type,required"`
+	Kind  param.Field[int64]                   `json:"kind"`
+	Name  param.Field[string]                  `json:"name"`
+	Range param.Field[interface{}]             `json:"range"`
+}
+
+func (r FilePartSourceParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r FilePartSourceParam) implementsFilePartSourceUnionParam() {}
+
+// Satisfied by [FileSourceParam], [SymbolSourceParam], [FilePartSourceParam].
+type FilePartSourceUnionParam interface {
+	implementsFilePartSourceUnionParam()
+}
+
+type FilePartSourceText struct {
+	End   int64                  `json:"end,required"`
+	Start int64                  `json:"start,required"`
+	Value string                 `json:"value,required"`
+	JSON  filePartSourceTextJSON `json:"-"`
+}
+
+// filePartSourceTextJSON contains the JSON metadata for the struct
+// [FilePartSourceText]
+type filePartSourceTextJSON struct {
+	End         apijson.Field
+	Start       apijson.Field
+	Value       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *FilePartSourceText) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r filePartSourceTextJSON) RawJSON() string {
+	return r.raw
+}
+
+type FilePartSourceTextParam struct {
+	End   param.Field[int64]  `json:"end,required"`
+	Start param.Field[int64]  `json:"start,required"`
+	Value param.Field[string] `json:"value,required"`
+}
+
+func (r FilePartSourceTextParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type FileSource struct {
+	Path string             `json:"path,required"`
+	Text FilePartSourceText `json:"text,required"`
+	Type FileSourceType     `json:"type,required"`
+	JSON fileSourceJSON     `json:"-"`
+}
+
+// fileSourceJSON contains the JSON metadata for the struct [FileSource]
+type fileSourceJSON struct {
+	Path        apijson.Field
+	Text        apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *FileSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r FileSource) implementsFilePartSource() {}
+
+type FileSourceType string
+
+const (
+	FileSourceTypeFile FileSourceType = "file"
+)
+
+func (r FileSourceType) IsKnown() bool {
+	switch r {
+	case FileSourceTypeFile:
+		return true
+	}
+	return false
+}
+
+type FileSourceParam struct {
+	Path param.Field[string]                  `json:"path,required"`
+	Text param.Field[FilePartSourceTextParam] `json:"text,required"`
+	Type param.Field[FileSourceType]          `json:"type,required"`
+}
+
+func (r FileSourceParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r FileSourceParam) implementsFilePartSourceUnionParam() {}
 
 type Message struct {
 	ID        string      `json:"id,required"`
@@ -609,15 +801,16 @@ func (r MessageRole) IsKnown() bool {
 }
 
 type Part struct {
-	ID        string   `json:"id,required"`
-	MessageID string   `json:"messageID,required"`
-	SessionID string   `json:"sessionID,required"`
-	Type      PartType `json:"type,required"`
-	CallID    string   `json:"callID"`
-	Cost      float64  `json:"cost"`
-	Filename  string   `json:"filename"`
-	Mime      string   `json:"mime"`
-	Snapshot  string   `json:"snapshot"`
+	ID        string         `json:"id,required"`
+	MessageID string         `json:"messageID,required"`
+	SessionID string         `json:"sessionID,required"`
+	Type      PartType       `json:"type,required"`
+	CallID    string         `json:"callID"`
+	Cost      float64        `json:"cost"`
+	Filename  string         `json:"filename"`
+	Mime      string         `json:"mime"`
+	Snapshot  string         `json:"snapshot"`
+	Source    FilePartSource `json:"source"`
 	// This field can have the runtime type of [ToolPartState].
 	State     interface{} `json:"state"`
 	Synthetic bool        `json:"synthetic"`
@@ -643,6 +836,7 @@ type partJSON struct {
 	Filename    apijson.Field
 	Mime        apijson.Field
 	Snapshot    apijson.Field
+	Source      apijson.Field
 	State       apijson.Field
 	Synthetic   apijson.Field
 	Text        apijson.Field
@@ -1016,6 +1210,163 @@ func (r StepStartPartType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type SymbolSource struct {
+	Kind  int64              `json:"kind,required"`
+	Name  string             `json:"name,required"`
+	Path  string             `json:"path,required"`
+	Range SymbolSourceRange  `json:"range,required"`
+	Text  FilePartSourceText `json:"text,required"`
+	Type  SymbolSourceType   `json:"type,required"`
+	JSON  symbolSourceJSON   `json:"-"`
+}
+
+// symbolSourceJSON contains the JSON metadata for the struct [SymbolSource]
+type symbolSourceJSON struct {
+	Kind        apijson.Field
+	Name        apijson.Field
+	Path        apijson.Field
+	Range       apijson.Field
+	Text        apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SymbolSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r symbolSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r SymbolSource) implementsFilePartSource() {}
+
+type SymbolSourceRange struct {
+	End   SymbolSourceRangeEnd   `json:"end,required"`
+	Start SymbolSourceRangeStart `json:"start,required"`
+	JSON  symbolSourceRangeJSON  `json:"-"`
+}
+
+// symbolSourceRangeJSON contains the JSON metadata for the struct
+// [SymbolSourceRange]
+type symbolSourceRangeJSON struct {
+	End         apijson.Field
+	Start       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SymbolSourceRange) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r symbolSourceRangeJSON) RawJSON() string {
+	return r.raw
+}
+
+type SymbolSourceRangeEnd struct {
+	Character float64                  `json:"character,required"`
+	Line      float64                  `json:"line,required"`
+	JSON      symbolSourceRangeEndJSON `json:"-"`
+}
+
+// symbolSourceRangeEndJSON contains the JSON metadata for the struct
+// [SymbolSourceRangeEnd]
+type symbolSourceRangeEndJSON struct {
+	Character   apijson.Field
+	Line        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SymbolSourceRangeEnd) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r symbolSourceRangeEndJSON) RawJSON() string {
+	return r.raw
+}
+
+type SymbolSourceRangeStart struct {
+	Character float64                    `json:"character,required"`
+	Line      float64                    `json:"line,required"`
+	JSON      symbolSourceRangeStartJSON `json:"-"`
+}
+
+// symbolSourceRangeStartJSON contains the JSON metadata for the struct
+// [SymbolSourceRangeStart]
+type symbolSourceRangeStartJSON struct {
+	Character   apijson.Field
+	Line        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SymbolSourceRangeStart) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r symbolSourceRangeStartJSON) RawJSON() string {
+	return r.raw
+}
+
+type SymbolSourceType string
+
+const (
+	SymbolSourceTypeSymbol SymbolSourceType = "symbol"
+)
+
+func (r SymbolSourceType) IsKnown() bool {
+	switch r {
+	case SymbolSourceTypeSymbol:
+		return true
+	}
+	return false
+}
+
+type SymbolSourceParam struct {
+	Kind  param.Field[int64]                   `json:"kind,required"`
+	Name  param.Field[string]                  `json:"name,required"`
+	Path  param.Field[string]                  `json:"path,required"`
+	Range param.Field[SymbolSourceRangeParam]  `json:"range,required"`
+	Text  param.Field[FilePartSourceTextParam] `json:"text,required"`
+	Type  param.Field[SymbolSourceType]        `json:"type,required"`
+}
+
+func (r SymbolSourceParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r SymbolSourceParam) implementsFilePartSourceUnionParam() {}
+
+type SymbolSourceRangeParam struct {
+	End   param.Field[SymbolSourceRangeEndParam]   `json:"end,required"`
+	Start param.Field[SymbolSourceRangeStartParam] `json:"start,required"`
+}
+
+func (r SymbolSourceRangeParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type SymbolSourceRangeEndParam struct {
+	Character param.Field[float64] `json:"character,required"`
+	Line      param.Field[float64] `json:"line,required"`
+}
+
+func (r SymbolSourceRangeEndParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type SymbolSourceRangeStartParam struct {
+	Character param.Field[float64] `json:"character,required"`
+	Line      param.Field[float64] `json:"line,required"`
+}
+
+func (r SymbolSourceRangeStartParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type TextPart struct {
@@ -1603,6 +1954,7 @@ type SessionChatParams struct {
 	ProviderID param.Field[string]                       `json:"providerID,required"`
 	MessageID  param.Field[string]                       `json:"messageID"`
 	Mode       param.Field[string]                       `json:"mode"`
+	Tools      param.Field[map[string]bool]              `json:"tools"`
 }
 
 func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
@@ -1614,6 +1966,7 @@ type SessionChatParamsPart struct {
 	ID        param.Field[string]                     `json:"id"`
 	Filename  param.Field[string]                     `json:"filename"`
 	Mime      param.Field[string]                     `json:"mime"`
+	Source    param.Field[FilePartSourceUnionParam]   `json:"source"`
 	Synthetic param.Field[bool]                       `json:"synthetic"`
 	Text      param.Field[string]                     `json:"text"`
 	Time      param.Field[interface{}]                `json:"time"`
