@@ -3,6 +3,10 @@
 package opencode
 
 import (
+	"context"
+	"net/http"
+
+	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 )
 
@@ -22,5 +26,13 @@ type TuiService struct {
 func NewTuiService(opts ...option.RequestOption) (r *TuiService) {
 	r = &TuiService{}
 	r.Options = opts
+	return
+}
+
+// Send a prompt to the TUI
+func (r *TuiService) Prompt(ctx context.Context, opts ...option.RequestOption) (res *bool, err error) {
+	opts = append(r.Options[:], opts...)
+	path := "tui/prompt"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return
 }
