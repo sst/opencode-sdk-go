@@ -25,7 +25,21 @@ func TestTuiPrompt(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.Prompt(context.TODO())
+	_, err := client.Tui.Prompt(context.TODO(), opencode.TuiPromptParams{
+		Parts: opencode.F([]opencode.PartUnionParam{opencode.TextPartParam{
+			ID:        opencode.F("id"),
+			MessageID: opencode.F("messageID"),
+			SessionID: opencode.F("sessionID"),
+			Text:      opencode.F("text"),
+			Type:      opencode.F(opencode.TextPartTypeText),
+			Synthetic: opencode.F(true),
+			Time: opencode.F(opencode.TextPartTimeParam{
+				Start: opencode.F(0.000000),
+				End:   opencode.F(0.000000),
+			}),
+		}}),
+		Text: opencode.F("text"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
