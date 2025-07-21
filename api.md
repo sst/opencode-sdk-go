@@ -133,4 +133,5 @@ Methods:
 
 Methods:
 
+- <code title="post /tui/open-help">client.Tui.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#TuiService.OpenHelp">OpenHelp</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) (<a href="https://pkg.go.dev/builtin#bool">bool</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /tui/prompt">client.Tui.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#TuiService.Prompt">Prompt</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#TuiPromptParams">TuiPromptParams</a>) (<a href="https://pkg.go.dev/builtin#bool">bool</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
