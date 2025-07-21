@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.18 (2025-07-21)
+
+Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
+
+### Features
+
+* **api:** api update ([8d3518b](https://github.com/sst/opencode-sdk-go/commit/8d3518b282310d878685054520717352711a345e))
+
 ## 0.1.0-alpha.17 (2025-07-18)
 
 Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
