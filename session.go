@@ -112,6 +112,18 @@ func (r *SessionService) Messages(ctx context.Context, id string, opts ...option
 	return
 }
 
+// Revert a message
+func (r *SessionService) Revert(ctx context.Context, id string, body SessionRevertParams, opts ...option.RequestOption) (res *Session, err error) {
+	opts = append(r.Options[:], opts...)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return
+	}
+	path := fmt.Sprintf("session/%s/revert", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return
+}
+
 // Share a session
 func (r *SessionService) Share(ctx context.Context, id string, opts ...option.RequestOption) (res *Session, err error) {
 	opts = append(r.Options[:], opts...)
@@ -133,6 +145,18 @@ func (r *SessionService) Summarize(ctx context.Context, id string, body SessionS
 	}
 	path := fmt.Sprintf("session/%s/summarize", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return
+}
+
+// Restore all reverted messages
+func (r *SessionService) Unrevert(ctx context.Context, id string, opts ...option.RequestOption) (res *Session, err error) {
+	opts = append(r.Options[:], opts...)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return
+	}
+	path := fmt.Sprintf("session/%s/unrevert", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return
 }
 
@@ -988,7 +1012,7 @@ func (r sessionTimeJSON) RawJSON() string {
 
 type SessionRevert struct {
 	MessageID string            `json:"messageID,required"`
-	Part      float64           `json:"part,required"`
+	PartID    string            `json:"partID"`
 	Snapshot  string            `json:"snapshot"`
 	JSON      sessionRevertJSON `json:"-"`
 }
@@ -996,7 +1020,7 @@ type SessionRevert struct {
 // sessionRevertJSON contains the JSON metadata for the struct [SessionRevert]
 type sessionRevertJSON struct {
 	MessageID   apijson.Field
-	Part        apijson.Field
+	PartID      apijson.Field
 	Snapshot    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -2007,6 +2031,15 @@ type SessionInitParams struct {
 }
 
 func (r SessionInitParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type SessionRevertParams struct {
+	MessageID param.Field[string] `json:"messageID,required"`
+	PartID    param.Field[string] `json:"partID"`
+}
+
+func (r SessionRevertParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
