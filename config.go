@@ -510,8 +510,12 @@ type KeybindsConfig struct {
 	MessagesPageUp string `json:"messages_page_up,required"`
 	// Navigate to previous message
 	MessagesPrevious string `json:"messages_previous,required"`
-	// Revert message
+	// Redo message
+	MessagesRedo string `json:"messages_redo,required"`
+	// @deprecated use messages_undo. Revert message
 	MessagesRevert string `json:"messages_revert,required"`
+	// Undo message
+	MessagesUndo string `json:"messages_undo,required"`
 	// List available models
 	ModelList string `json:"model_list,required"`
 	// Create/update AGENTS.md
@@ -565,7 +569,9 @@ type keybindsConfigJSON struct {
 	MessagesPageDown     apijson.Field
 	MessagesPageUp       apijson.Field
 	MessagesPrevious     apijson.Field
+	MessagesRedo         apijson.Field
 	MessagesRevert       apijson.Field
+	MessagesUndo         apijson.Field
 	ModelList            apijson.Field
 	ProjectInit          apijson.Field
 	SessionCompact       apijson.Field
