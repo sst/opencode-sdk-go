@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.21 (2025-07-22)
+
+Full Changelog: [v0.1.0-alpha.20...v0.1.0-alpha.21](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.20...v0.1.0-alpha.21)
+
+### Features
+
+* **api:** api update ([926220d](https://github.com/sst/opencode-sdk-go/commit/926220d44dd9886b41ea278ddec4e708c49f6559))
+* **api:** api update ([9f34787](https://github.com/sst/opencode-sdk-go/commit/9f347876b35b7f898060c1a5f71c322e95978e3e))
+* **api:** api update ([379c8e0](https://github.com/sst/opencode-sdk-go/commit/379c8e00197e13aebaf2f2d61277b125f1f90011))
+
+
+### Bug Fixes
+
+* **client:** process custom base url ahead of time ([8a99302](https://github.com/sst/opencode-sdk-go/commit/8a99302cafd4fbb587e087ce5e24a94abd791017))
+
 ## 0.1.0-alpha.20 (2025-07-21)
 
 Full Changelog: [v0.1.0-alpha.19...v0.1.0-alpha.20](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.19...v0.1.0-alpha.20)
