@@ -175,6 +175,7 @@ func (r *SessionService) Unshare(ctx context.Context, id string, opts ...option.
 type AssistantMessage struct {
 	ID         string                 `json:"id,required"`
 	Cost       float64                `json:"cost,required"`
+	Mode       string                 `json:"mode,required"`
 	ModelID    string                 `json:"modelID,required"`
 	Path       AssistantMessagePath   `json:"path,required"`
 	ProviderID string                 `json:"providerID,required"`
@@ -193,6 +194,7 @@ type AssistantMessage struct {
 type assistantMessageJSON struct {
 	ID          apijson.Field
 	Cost        apijson.Field
+	Mode        apijson.Field
 	ModelID     apijson.Field
 	Path        apijson.Field
 	ProviderID  apijson.Field
@@ -735,6 +737,7 @@ type Message struct {
 	Cost float64     `json:"cost"`
 	// This field can have the runtime type of [AssistantMessageError].
 	Error   interface{} `json:"error"`
+	Mode    string      `json:"mode"`
 	ModelID string      `json:"modelID"`
 	// This field can have the runtime type of [AssistantMessagePath].
 	Path       interface{} `json:"path"`
@@ -756,6 +759,7 @@ type messageJSON struct {
 	Time        apijson.Field
 	Cost        apijson.Field
 	Error       apijson.Field
+	Mode        apijson.Field
 	ModelID     apijson.Field
 	Path        apijson.Field
 	ProviderID  apijson.Field
