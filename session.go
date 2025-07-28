@@ -1073,6 +1073,7 @@ func (r sessionTimeJSON) RawJSON() string {
 
 type SessionRevert struct {
 	MessageID string            `json:"messageID,required"`
+	Diff      string            `json:"diff"`
 	PartID    string            `json:"partID"`
 	Snapshot  string            `json:"snapshot"`
 	JSON      sessionRevertJSON `json:"-"`
@@ -1081,6 +1082,7 @@ type SessionRevert struct {
 // sessionRevertJSON contains the JSON metadata for the struct [SessionRevert]
 type sessionRevertJSON struct {
 	MessageID   apijson.Field
+	Diff        apijson.Field
 	PartID      apijson.Field
 	Snapshot    apijson.Field
 	raw         string
@@ -2039,6 +2041,7 @@ type SessionChatParams struct {
 	ProviderID param.Field[string]                       `json:"providerID,required"`
 	MessageID  param.Field[string]                       `json:"messageID"`
 	Mode       param.Field[string]                       `json:"mode"`
+	System     param.Field[string]                       `json:"system"`
 	Tools      param.Field[map[string]bool]              `json:"tools"`
 }
 

@@ -131,6 +131,7 @@ func TestSessionChatWithOptionalParams(t *testing.T) {
 			ProviderID: opencode.F("providerID"),
 			MessageID:  opencode.F("msg"),
 			Mode:       opencode.F("mode"),
+			System:     opencode.F("system"),
 			Tools: opencode.F(map[string]bool{
 				"foo": true,
 			}),
