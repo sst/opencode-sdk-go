@@ -538,6 +538,7 @@ func (r EventListResponseEventMessagePartRemoved) implementsEventListResponse() 
 type EventListResponseEventMessagePartRemovedProperties struct {
 	MessageID string                                                 `json:"messageID,required"`
 	PartID    string                                                 `json:"partID,required"`
+	SessionID string                                                 `json:"sessionID,required"`
 	JSON      eventListResponseEventMessagePartRemovedPropertiesJSON `json:"-"`
 }
 
@@ -546,6 +547,7 @@ type EventListResponseEventMessagePartRemovedProperties struct {
 type eventListResponseEventMessagePartRemovedPropertiesJSON struct {
 	MessageID   apijson.Field
 	PartID      apijson.Field
+	SessionID   apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
