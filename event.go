@@ -48,15 +48,15 @@ func (r *EventService) ListStreaming(ctx context.Context, opts ...option.Request
 
 type EventListResponse struct {
 	// This field can have the runtime type of
-	// [EventListResponseEventLspClientDiagnosticsProperties],
-	// [EventListResponseEventPermissionUpdatedProperties],
-	// [EventListResponseEventFileEditedProperties],
 	// [EventListResponseEventInstallationUpdatedProperties],
+	// [EventListResponseEventLspClientDiagnosticsProperties],
 	// [EventListResponseEventMessageUpdatedProperties],
 	// [EventListResponseEventMessageRemovedProperties],
 	// [EventListResponseEventMessagePartUpdatedProperties],
 	// [EventListResponseEventMessagePartRemovedProperties],
 	// [EventListResponseEventStorageWriteProperties],
+	// [EventListResponseEventPermissionUpdatedProperties],
+	// [EventListResponseEventFileEditedProperties],
 	// [EventListResponseEventSessionUpdatedProperties],
 	// [EventListResponseEventSessionDeletedProperties],
 	// [EventListResponseEventSessionIdleProperties],
@@ -95,13 +95,13 @@ func (r *EventListResponse) UnmarshalJSON(data []byte) (err error) {
 // specific types for more type safety.
 //
 // Possible runtime types of the union are
-// [EventListResponseEventLspClientDiagnostics],
-// [EventListResponseEventPermissionUpdated], [EventListResponseEventFileEdited],
 // [EventListResponseEventInstallationUpdated],
+// [EventListResponseEventLspClientDiagnostics],
 // [EventListResponseEventMessageUpdated], [EventListResponseEventMessageRemoved],
 // [EventListResponseEventMessagePartUpdated],
 // [EventListResponseEventMessagePartRemoved],
-// [EventListResponseEventStorageWrite], [EventListResponseEventSessionUpdated],
+// [EventListResponseEventStorageWrite], [EventListResponseEventPermissionUpdated],
+// [EventListResponseEventFileEdited], [EventListResponseEventSessionUpdated],
 // [EventListResponseEventSessionDeleted], [EventListResponseEventSessionIdle],
 // [EventListResponseEventSessionError],
 // [EventListResponseEventFileWatcherUpdated],
@@ -110,13 +110,13 @@ func (r EventListResponse) AsUnion() EventListResponseUnion {
 	return r.union
 }
 
-// Union satisfied by [EventListResponseEventLspClientDiagnostics],
-// [EventListResponseEventPermissionUpdated], [EventListResponseEventFileEdited],
-// [EventListResponseEventInstallationUpdated],
+// Union satisfied by [EventListResponseEventInstallationUpdated],
+// [EventListResponseEventLspClientDiagnostics],
 // [EventListResponseEventMessageUpdated], [EventListResponseEventMessageRemoved],
 // [EventListResponseEventMessagePartUpdated],
 // [EventListResponseEventMessagePartRemoved],
-// [EventListResponseEventStorageWrite], [EventListResponseEventSessionUpdated],
+// [EventListResponseEventStorageWrite], [EventListResponseEventPermissionUpdated],
+// [EventListResponseEventFileEdited], [EventListResponseEventSessionUpdated],
 // [EventListResponseEventSessionDeleted], [EventListResponseEventSessionIdle],
 // [EventListResponseEventSessionError], [EventListResponseEventFileWatcherUpdated]
 // or [EventListResponseEventIdeInstalled].
@@ -130,23 +130,13 @@ func init() {
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EventListResponseEventLspClientDiagnostics{}),
-			DiscriminatorValue: "lsp.client.diagnostics",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EventListResponseEventPermissionUpdated{}),
-			DiscriminatorValue: "permission.updated",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EventListResponseEventFileEdited{}),
-			DiscriminatorValue: "file.edited",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(EventListResponseEventInstallationUpdated{}),
 			DiscriminatorValue: "installation.updated",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(EventListResponseEventLspClientDiagnostics{}),
+			DiscriminatorValue: "lsp.client.diagnostics",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
@@ -172,6 +162,16 @@ func init() {
 			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(EventListResponseEventStorageWrite{}),
 			DiscriminatorValue: "storage.write",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(EventListResponseEventPermissionUpdated{}),
+			DiscriminatorValue: "permission.updated",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(EventListResponseEventFileEdited{}),
+			DiscriminatorValue: "file.edited",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
@@ -204,6 +204,66 @@ func init() {
 			DiscriminatorValue: "ide.installed",
 		},
 	)
+}
+
+type EventListResponseEventInstallationUpdated struct {
+	Properties EventListResponseEventInstallationUpdatedProperties `json:"properties,required"`
+	Type       EventListResponseEventInstallationUpdatedType       `json:"type,required"`
+	JSON       eventListResponseEventInstallationUpdatedJSON       `json:"-"`
+}
+
+// eventListResponseEventInstallationUpdatedJSON contains the JSON metadata for the
+// struct [EventListResponseEventInstallationUpdated]
+type eventListResponseEventInstallationUpdatedJSON struct {
+	Properties  apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventInstallationUpdated) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventInstallationUpdatedJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r EventListResponseEventInstallationUpdated) implementsEventListResponse() {}
+
+type EventListResponseEventInstallationUpdatedProperties struct {
+	Version string                                                  `json:"version,required"`
+	JSON    eventListResponseEventInstallationUpdatedPropertiesJSON `json:"-"`
+}
+
+// eventListResponseEventInstallationUpdatedPropertiesJSON contains the JSON
+// metadata for the struct [EventListResponseEventInstallationUpdatedProperties]
+type eventListResponseEventInstallationUpdatedPropertiesJSON struct {
+	Version     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventInstallationUpdatedProperties) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventInstallationUpdatedPropertiesJSON) RawJSON() string {
+	return r.raw
+}
+
+type EventListResponseEventInstallationUpdatedType string
+
+const (
+	EventListResponseEventInstallationUpdatedTypeInstallationUpdated EventListResponseEventInstallationUpdatedType = "installation.updated"
+)
+
+func (r EventListResponseEventInstallationUpdatedType) IsKnown() bool {
+	switch r {
+	case EventListResponseEventInstallationUpdatedTypeInstallationUpdated:
+		return true
+	}
+	return false
 }
 
 type EventListResponseEventLspClientDiagnostics struct {
@@ -263,215 +323,6 @@ const (
 func (r EventListResponseEventLspClientDiagnosticsType) IsKnown() bool {
 	switch r {
 	case EventListResponseEventLspClientDiagnosticsTypeLspClientDiagnostics:
-		return true
-	}
-	return false
-}
-
-type EventListResponseEventPermissionUpdated struct {
-	Properties EventListResponseEventPermissionUpdatedProperties `json:"properties,required"`
-	Type       EventListResponseEventPermissionUpdatedType       `json:"type,required"`
-	JSON       eventListResponseEventPermissionUpdatedJSON       `json:"-"`
-}
-
-// eventListResponseEventPermissionUpdatedJSON contains the JSON metadata for the
-// struct [EventListResponseEventPermissionUpdated]
-type eventListResponseEventPermissionUpdatedJSON struct {
-	Properties  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventPermissionUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventPermissionUpdatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventPermissionUpdated) implementsEventListResponse() {}
-
-type EventListResponseEventPermissionUpdatedProperties struct {
-	ID        string                                                `json:"id,required"`
-	Metadata  map[string]interface{}                                `json:"metadata,required"`
-	SessionID string                                                `json:"sessionID,required"`
-	Time      EventListResponseEventPermissionUpdatedPropertiesTime `json:"time,required"`
-	Title     string                                                `json:"title,required"`
-	JSON      eventListResponseEventPermissionUpdatedPropertiesJSON `json:"-"`
-}
-
-// eventListResponseEventPermissionUpdatedPropertiesJSON contains the JSON metadata
-// for the struct [EventListResponseEventPermissionUpdatedProperties]
-type eventListResponseEventPermissionUpdatedPropertiesJSON struct {
-	ID          apijson.Field
-	Metadata    apijson.Field
-	SessionID   apijson.Field
-	Time        apijson.Field
-	Title       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventPermissionUpdatedProperties) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventPermissionUpdatedPropertiesJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventPermissionUpdatedPropertiesTime struct {
-	Created float64                                                   `json:"created,required"`
-	JSON    eventListResponseEventPermissionUpdatedPropertiesTimeJSON `json:"-"`
-}
-
-// eventListResponseEventPermissionUpdatedPropertiesTimeJSON contains the JSON
-// metadata for the struct [EventListResponseEventPermissionUpdatedPropertiesTime]
-type eventListResponseEventPermissionUpdatedPropertiesTimeJSON struct {
-	Created     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventPermissionUpdatedPropertiesTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventPermissionUpdatedPropertiesTimeJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventPermissionUpdatedType string
-
-const (
-	EventListResponseEventPermissionUpdatedTypePermissionUpdated EventListResponseEventPermissionUpdatedType = "permission.updated"
-)
-
-func (r EventListResponseEventPermissionUpdatedType) IsKnown() bool {
-	switch r {
-	case EventListResponseEventPermissionUpdatedTypePermissionUpdated:
-		return true
-	}
-	return false
-}
-
-type EventListResponseEventFileEdited struct {
-	Properties EventListResponseEventFileEditedProperties `json:"properties,required"`
-	Type       EventListResponseEventFileEditedType       `json:"type,required"`
-	JSON       eventListResponseEventFileEditedJSON       `json:"-"`
-}
-
-// eventListResponseEventFileEditedJSON contains the JSON metadata for the struct
-// [EventListResponseEventFileEdited]
-type eventListResponseEventFileEditedJSON struct {
-	Properties  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventFileEdited) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventFileEditedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventFileEdited) implementsEventListResponse() {}
-
-type EventListResponseEventFileEditedProperties struct {
-	File string                                         `json:"file,required"`
-	JSON eventListResponseEventFileEditedPropertiesJSON `json:"-"`
-}
-
-// eventListResponseEventFileEditedPropertiesJSON contains the JSON metadata for
-// the struct [EventListResponseEventFileEditedProperties]
-type eventListResponseEventFileEditedPropertiesJSON struct {
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventFileEditedProperties) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventFileEditedPropertiesJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventFileEditedType string
-
-const (
-	EventListResponseEventFileEditedTypeFileEdited EventListResponseEventFileEditedType = "file.edited"
-)
-
-func (r EventListResponseEventFileEditedType) IsKnown() bool {
-	switch r {
-	case EventListResponseEventFileEditedTypeFileEdited:
-		return true
-	}
-	return false
-}
-
-type EventListResponseEventInstallationUpdated struct {
-	Properties EventListResponseEventInstallationUpdatedProperties `json:"properties,required"`
-	Type       EventListResponseEventInstallationUpdatedType       `json:"type,required"`
-	JSON       eventListResponseEventInstallationUpdatedJSON       `json:"-"`
-}
-
-// eventListResponseEventInstallationUpdatedJSON contains the JSON metadata for the
-// struct [EventListResponseEventInstallationUpdated]
-type eventListResponseEventInstallationUpdatedJSON struct {
-	Properties  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventInstallationUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventInstallationUpdatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventInstallationUpdated) implementsEventListResponse() {}
-
-type EventListResponseEventInstallationUpdatedProperties struct {
-	Version string                                                  `json:"version,required"`
-	JSON    eventListResponseEventInstallationUpdatedPropertiesJSON `json:"-"`
-}
-
-// eventListResponseEventInstallationUpdatedPropertiesJSON contains the JSON
-// metadata for the struct [EventListResponseEventInstallationUpdatedProperties]
-type eventListResponseEventInstallationUpdatedPropertiesJSON struct {
-	Version     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventInstallationUpdatedProperties) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventInstallationUpdatedPropertiesJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventInstallationUpdatedType string
-
-const (
-	EventListResponseEventInstallationUpdatedTypeInstallationUpdated EventListResponseEventInstallationUpdatedType = "installation.updated"
-)
-
-func (r EventListResponseEventInstallationUpdatedType) IsKnown() bool {
-	switch r {
-	case EventListResponseEventInstallationUpdatedTypeInstallationUpdated:
 		return true
 	}
 	return false
@@ -778,6 +629,155 @@ const (
 func (r EventListResponseEventStorageWriteType) IsKnown() bool {
 	switch r {
 	case EventListResponseEventStorageWriteTypeStorageWrite:
+		return true
+	}
+	return false
+}
+
+type EventListResponseEventPermissionUpdated struct {
+	Properties EventListResponseEventPermissionUpdatedProperties `json:"properties,required"`
+	Type       EventListResponseEventPermissionUpdatedType       `json:"type,required"`
+	JSON       eventListResponseEventPermissionUpdatedJSON       `json:"-"`
+}
+
+// eventListResponseEventPermissionUpdatedJSON contains the JSON metadata for the
+// struct [EventListResponseEventPermissionUpdated]
+type eventListResponseEventPermissionUpdatedJSON struct {
+	Properties  apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventPermissionUpdated) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventPermissionUpdatedJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r EventListResponseEventPermissionUpdated) implementsEventListResponse() {}
+
+type EventListResponseEventPermissionUpdatedProperties struct {
+	ID        string                                                `json:"id,required"`
+	Metadata  map[string]interface{}                                `json:"metadata,required"`
+	SessionID string                                                `json:"sessionID,required"`
+	Time      EventListResponseEventPermissionUpdatedPropertiesTime `json:"time,required"`
+	Title     string                                                `json:"title,required"`
+	JSON      eventListResponseEventPermissionUpdatedPropertiesJSON `json:"-"`
+}
+
+// eventListResponseEventPermissionUpdatedPropertiesJSON contains the JSON metadata
+// for the struct [EventListResponseEventPermissionUpdatedProperties]
+type eventListResponseEventPermissionUpdatedPropertiesJSON struct {
+	ID          apijson.Field
+	Metadata    apijson.Field
+	SessionID   apijson.Field
+	Time        apijson.Field
+	Title       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventPermissionUpdatedProperties) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventPermissionUpdatedPropertiesJSON) RawJSON() string {
+	return r.raw
+}
+
+type EventListResponseEventPermissionUpdatedPropertiesTime struct {
+	Created float64                                                   `json:"created,required"`
+	JSON    eventListResponseEventPermissionUpdatedPropertiesTimeJSON `json:"-"`
+}
+
+// eventListResponseEventPermissionUpdatedPropertiesTimeJSON contains the JSON
+// metadata for the struct [EventListResponseEventPermissionUpdatedPropertiesTime]
+type eventListResponseEventPermissionUpdatedPropertiesTimeJSON struct {
+	Created     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventPermissionUpdatedPropertiesTime) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventPermissionUpdatedPropertiesTimeJSON) RawJSON() string {
+	return r.raw
+}
+
+type EventListResponseEventPermissionUpdatedType string
+
+const (
+	EventListResponseEventPermissionUpdatedTypePermissionUpdated EventListResponseEventPermissionUpdatedType = "permission.updated"
+)
+
+func (r EventListResponseEventPermissionUpdatedType) IsKnown() bool {
+	switch r {
+	case EventListResponseEventPermissionUpdatedTypePermissionUpdated:
+		return true
+	}
+	return false
+}
+
+type EventListResponseEventFileEdited struct {
+	Properties EventListResponseEventFileEditedProperties `json:"properties,required"`
+	Type       EventListResponseEventFileEditedType       `json:"type,required"`
+	JSON       eventListResponseEventFileEditedJSON       `json:"-"`
+}
+
+// eventListResponseEventFileEditedJSON contains the JSON metadata for the struct
+// [EventListResponseEventFileEdited]
+type eventListResponseEventFileEditedJSON struct {
+	Properties  apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventFileEdited) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventFileEditedJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r EventListResponseEventFileEdited) implementsEventListResponse() {}
+
+type EventListResponseEventFileEditedProperties struct {
+	File string                                         `json:"file,required"`
+	JSON eventListResponseEventFileEditedPropertiesJSON `json:"-"`
+}
+
+// eventListResponseEventFileEditedPropertiesJSON contains the JSON metadata for
+// the struct [EventListResponseEventFileEditedProperties]
+type eventListResponseEventFileEditedPropertiesJSON struct {
+	File        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventFileEditedProperties) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventFileEditedPropertiesJSON) RawJSON() string {
+	return r.raw
+}
+
+type EventListResponseEventFileEditedType string
+
+const (
+	EventListResponseEventFileEditedTypeFileEdited EventListResponseEventFileEditedType = "file.edited"
+)
+
+func (r EventListResponseEventFileEditedType) IsKnown() bool {
+	switch r {
+	case EventListResponseEventFileEditedTypeFileEdited:
 		return true
 	}
 	return false
@@ -1299,15 +1299,15 @@ func (r EventListResponseEventIdeInstalledType) IsKnown() bool {
 type EventListResponseType string
 
 const (
-	EventListResponseTypeLspClientDiagnostics EventListResponseType = "lsp.client.diagnostics"
-	EventListResponseTypePermissionUpdated    EventListResponseType = "permission.updated"
-	EventListResponseTypeFileEdited           EventListResponseType = "file.edited"
 	EventListResponseTypeInstallationUpdated  EventListResponseType = "installation.updated"
+	EventListResponseTypeLspClientDiagnostics EventListResponseType = "lsp.client.diagnostics"
 	EventListResponseTypeMessageUpdated       EventListResponseType = "message.updated"
 	EventListResponseTypeMessageRemoved       EventListResponseType = "message.removed"
 	EventListResponseTypeMessagePartUpdated   EventListResponseType = "message.part.updated"
 	EventListResponseTypeMessagePartRemoved   EventListResponseType = "message.part.removed"
 	EventListResponseTypeStorageWrite         EventListResponseType = "storage.write"
+	EventListResponseTypePermissionUpdated    EventListResponseType = "permission.updated"
+	EventListResponseTypeFileEdited           EventListResponseType = "file.edited"
 	EventListResponseTypeSessionUpdated       EventListResponseType = "session.updated"
 	EventListResponseTypeSessionDeleted       EventListResponseType = "session.deleted"
 	EventListResponseTypeSessionIdle          EventListResponseType = "session.idle"
@@ -1318,7 +1318,7 @@ const (
 
 func (r EventListResponseType) IsKnown() bool {
 	switch r {
-	case EventListResponseTypeLspClientDiagnostics, EventListResponseTypePermissionUpdated, EventListResponseTypeFileEdited, EventListResponseTypeInstallationUpdated, EventListResponseTypeMessageUpdated, EventListResponseTypeMessageRemoved, EventListResponseTypeMessagePartUpdated, EventListResponseTypeMessagePartRemoved, EventListResponseTypeStorageWrite, EventListResponseTypeSessionUpdated, EventListResponseTypeSessionDeleted, EventListResponseTypeSessionIdle, EventListResponseTypeSessionError, EventListResponseTypeFileWatcherUpdated, EventListResponseTypeIdeInstalled:
+	case EventListResponseTypeInstallationUpdated, EventListResponseTypeLspClientDiagnostics, EventListResponseTypeMessageUpdated, EventListResponseTypeMessageRemoved, EventListResponseTypeMessagePartUpdated, EventListResponseTypeMessagePartRemoved, EventListResponseTypeStorageWrite, EventListResponseTypePermissionUpdated, EventListResponseTypeFileEdited, EventListResponseTypeSessionUpdated, EventListResponseTypeSessionDeleted, EventListResponseTypeSessionIdle, EventListResponseTypeSessionError, EventListResponseTypeFileWatcherUpdated, EventListResponseTypeIdeInstalled:
 		return true
 	}
 	return false
