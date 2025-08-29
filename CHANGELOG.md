@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.0-alpha.29 (2025-08-29)
+
+Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
+
+### Features
+
+* **client:** support optional json html escaping ([a3256ce](https://github.com/sst/opencode-sdk-go/commit/a3256ce99b627d82c212ad8985bac8665254a0f4))
+
+
+### Bug Fixes
+
+* close body before retrying ([3fd6ee2](https://github.com/sst/opencode-sdk-go/commit/3fd6ee2bd1813242b7c133f0d4a996aae9ccd9cc))
+
+
+### Chores
+
+* **internal:** codegen related update ([53a0edb](https://github.com/sst/opencode-sdk-go/commit/53a0edb963a26e32bd3e073bb68605ca34f2133c))
+* **internal:** update comment in script ([1514f3c](https://github.com/sst/opencode-sdk-go/commit/1514f3c60cb787b7aa013a1f06b46f289e3abf83))
+* update @stainless-api/prism-cli to v5.15.0 ([8e03de2](https://github.com/sst/opencode-sdk-go/commit/8e03de2b7d492d80a06cd0f798e79598c9bcef1d))
+
 ## 0.1.0-alpha.28 (2025-07-29)
 
 Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
