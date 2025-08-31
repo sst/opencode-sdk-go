@@ -1,4 +1,4 @@
-module github.com/stainless-sdks/opencode-go
+module github.com/sst/opencode-sdk-go
 
 go 1.21
 

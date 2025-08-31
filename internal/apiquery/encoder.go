@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/stainless-sdks/opencode-go/packages/param"
+	"github.com/sst/opencode-sdk-go/internal/param"
 )
 
 var encoders sync.Map // map[reflect.Type]encoderFunc
@@ -20,7 +20,7 @@ type encoder struct {
 	settings   QuerySettings
 }
 
-type encoderFunc func(key string, value reflect.Value) ([]Pair, error)
+type encoderFunc func(key string, value reflect.Value) []Pair
 
 type encoderField struct {
 	tag parsedStructTag
@@ -61,7 +61,7 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 		f  encoderFunc
 	)
 	wg.Add(1)
-	fi, loaded := encoders.LoadOrStore(entry, encoderFunc(func(key string, v reflect.Value) ([]Pair, error) {
+	fi, loaded := encoders.LoadOrStore(entry, encoderFunc(func(key string, v reflect.Value) []Pair {
 		wg.Wait()
 		return f(key, v)
 	}))
@@ -76,36 +76,28 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 	return f
 }
 
-func marshalerEncoder(key string, value reflect.Value) ([]Pair, error) {
-	s, err := value.Interface().(json.Marshaler).MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("apiquery: json fallback marshal error %s", err)
-	}
-	return []Pair{{key, string(s)}}, nil
+func marshalerEncoder(key string, value reflect.Value) []Pair {
+	s, _ := value.Interface().(json.Marshaler).MarshalJSON()
+	return []Pair{{key, string(s)}}
 }
 
 func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return e.newTimeTypeEncoder(t)
 	}
-
-	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
-		return e.newRichFieldTypeEncoder(t)
-	}
-
 	if !e.root && t.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) {
 		return marshalerEncoder
 	}
-
 	e.root = false
 	switch t.Kind() {
 	case reflect.Pointer:
 		encoder := e.typeEncoder(t.Elem())
-		return func(key string, value reflect.Value) (pairs []Pair, err error) {
+		return func(key string, value reflect.Value) (pairs []Pair) {
 			if !value.IsValid() || value.IsNil() {
 				return
 			}
-			return encoder(key, value.Elem())
+			pairs = encoder(key, value.Elem())
+			return
 		}
 	case reflect.Struct:
 		return e.newStructTypeEncoder(t)
@@ -123,14 +115,8 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
-		return e.newRichFieldTypeEncoder(t)
-	}
-
-	for i := 0; i < t.NumField(); i++ {
-		if t.Field(i).Type == paramUnionType && t.Field(i).Anonymous {
-			return e.newStructUnionTypeEncoder(t)
-		}
+	if t.Implements(reflect.TypeOf((*param.FieldLike)(nil)).Elem()) {
+		return e.newFieldTypeEncoder(t)
 	}
 
 	encoderFields := []encoderField{}
@@ -159,7 +145,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				continue
 			}
 
-			if (ptag.name == "-" || ptag.name == "") && !ptag.inline {
+			if ptag.name == "-" && !ptag.inline {
 				continue
 			}
 
@@ -173,25 +159,13 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					e.dateFormat = "2006-01-02"
 				}
 			}
-			var encoderFn encoderFunc
-			if ptag.omitzero {
-				typeEncoderFn := e.typeEncoder(field.Type)
-				encoderFn = func(key string, value reflect.Value) ([]Pair, error) {
-					if value.IsZero() {
-						return nil, nil
-					}
-					return typeEncoderFn(key, value)
-				}
-			} else {
-				encoderFn = e.typeEncoder(field.Type)
-			}
-			encoderFields = append(encoderFields, encoderField{ptag, encoderFn, idx})
+			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
 			e.dateFormat = oldFormat
 		}
 	}
 	collectEncoderFields(t, []int{})
 
-	return func(key string, value reflect.Value) (pairs []Pair, err error) {
+	return func(key string, value reflect.Value) (pairs []Pair) {
 		for _, ef := range encoderFields {
 			var subkey string = e.renderKeyPath(key, ef.tag.name)
 			if ef.tag.inline {
@@ -199,62 +173,25 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 			}
 
 			field := value.FieldByIndex(ef.idx)
-			subpairs, suberr := ef.fn(subkey, field)
-			if suberr != nil {
-				err = suberr
-			}
-			pairs = append(pairs, subpairs...)
+			pairs = append(pairs, ef.fn(subkey, field)...)
 		}
 		return
-	}
-}
-
-var paramUnionType = reflect.TypeOf((*param.APIUnion)(nil)).Elem()
-
-func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
-	var fieldEncoders []encoderFunc
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if field.Type == paramUnionType && field.Anonymous {
-			fieldEncoders = append(fieldEncoders, nil)
-			continue
-		}
-		fieldEncoders = append(fieldEncoders, e.typeEncoder(field.Type))
-	}
-
-	return func(key string, value reflect.Value) (pairs []Pair, err error) {
-		for i := 0; i < t.NumField(); i++ {
-			if value.Field(i).Type() == paramUnionType {
-				continue
-			}
-			if !value.Field(i).IsZero() {
-				return fieldEncoders[i](key, value.Field(i))
-			}
-		}
-		return nil, fmt.Errorf("apiquery: union %s has no field set", t.String())
 	}
 }
 
 func (e *encoder) newMapEncoder(t reflect.Type) encoderFunc {
 	keyEncoder := e.typeEncoder(t.Key())
 	elementEncoder := e.typeEncoder(t.Elem())
-	return func(key string, value reflect.Value) (pairs []Pair, err error) {
+	return func(key string, value reflect.Value) (pairs []Pair) {
 		iter := value.MapRange()
 		for iter.Next() {
-			encodedKey, err := keyEncoder("", iter.Key())
-			if err != nil {
-				return nil, err
-			}
+			encodedKey := keyEncoder("", iter.Key())
 			if len(encodedKey) != 1 {
-				return nil, fmt.Errorf("apiquery: unexpected number of parts for encoded map key, map may contain non-primitive")
+				panic("Unexpected number of parts for encoded map key. Are you using a non-primitive for this map?")
 			}
 			subkey := encodedKey[0].value
 			keyPath := e.renderKeyPath(key, subkey)
-			subpairs, suberr := elementEncoder(keyPath, iter.Value())
-			if suberr != nil {
-				err = suberr
-			}
-			pairs = append(pairs, subpairs...)
+			pairs = append(pairs, elementEncoder(keyPath, iter.Value())...)
 		}
 		return
 	}
@@ -274,48 +211,36 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 	switch e.settings.ArrayFormat {
 	case ArrayQueryFormatComma:
 		innerEncoder := e.typeEncoder(t.Elem())
-		return func(key string, v reflect.Value) ([]Pair, error) {
+		return func(key string, v reflect.Value) []Pair {
 			elements := []string{}
 			for i := 0; i < v.Len(); i++ {
-				innerPairs, err := innerEncoder("", v.Index(i))
-				if err != nil {
-					return nil, err
-				}
-				for _, pair := range innerPairs {
+				for _, pair := range innerEncoder("", v.Index(i)) {
 					elements = append(elements, pair.value)
 				}
 			}
 			if len(elements) == 0 {
-				return []Pair{}, nil
+				return []Pair{}
 			}
-			return []Pair{{key, strings.Join(elements, ",")}}, nil
+			return []Pair{{key, strings.Join(elements, ",")}}
 		}
 	case ArrayQueryFormatRepeat:
 		innerEncoder := e.typeEncoder(t.Elem())
-		return func(key string, value reflect.Value) (pairs []Pair, err error) {
+		return func(key string, value reflect.Value) (pairs []Pair) {
 			for i := 0; i < value.Len(); i++ {
-				subpairs, suberr := innerEncoder(key, value.Index(i))
-				if suberr != nil {
-					err = suberr
-				}
-				pairs = append(pairs, subpairs...)
+				pairs = append(pairs, innerEncoder(key, value.Index(i))...)
 			}
-			return
+			return pairs
 		}
 	case ArrayQueryFormatIndices:
 		panic("The array indices format is not supported yet")
 	case ArrayQueryFormatBrackets:
 		innerEncoder := e.typeEncoder(t.Elem())
-		return func(key string, value reflect.Value) (pairs []Pair, err error) {
-			pairs = []Pair{}
+		return func(key string, value reflect.Value) []Pair {
+			pairs := []Pair{}
 			for i := 0; i < value.Len(); i++ {
-				subpairs, suberr := innerEncoder(key+"[]", value.Index(i))
-				if suberr != nil {
-					err = suberr
-				}
-				pairs = append(pairs, subpairs...)
+				pairs = append(pairs, innerEncoder(key+"[]", value.Index(i))...)
 			}
-			return
+			return pairs
 		}
 	default:
 		panic(fmt.Sprintf("Unknown ArrayFormat value: %d", e.settings.ArrayFormat))
@@ -328,46 +253,46 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 		inner := t.Elem()
 
 		innerEncoder := e.newPrimitiveTypeEncoder(inner)
-		return func(key string, v reflect.Value) ([]Pair, error) {
+		return func(key string, v reflect.Value) []Pair {
 			if !v.IsValid() || v.IsNil() {
-				return nil, nil
+				return nil
 			}
 			return innerEncoder(key, v.Elem())
 		}
 	case reflect.String:
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return []Pair{{key, v.String()}}, nil
+		return func(key string, v reflect.Value) []Pair {
+			return []Pair{{key, v.String()}}
 		}
 	case reflect.Bool:
-		return func(key string, v reflect.Value) ([]Pair, error) {
+		return func(key string, v reflect.Value) []Pair {
 			if v.Bool() {
-				return []Pair{{key, "true"}}, nil
+				return []Pair{{key, "true"}}
 			}
-			return []Pair{{key, "false"}}, nil
+			return []Pair{{key, "false"}}
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return []Pair{{key, strconv.FormatInt(v.Int(), 10)}}, nil
+		return func(key string, v reflect.Value) []Pair {
+			return []Pair{{key, strconv.FormatInt(v.Int(), 10)}}
 		}
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return []Pair{{key, strconv.FormatUint(v.Uint(), 10)}}, nil
+		return func(key string, v reflect.Value) []Pair {
+			return []Pair{{key, strconv.FormatUint(v.Uint(), 10)}}
 		}
 	case reflect.Float32, reflect.Float64:
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return []Pair{{key, strconv.FormatFloat(v.Float(), 'f', -1, 64)}}, nil
+		return func(key string, v reflect.Value) []Pair {
+			return []Pair{{key, strconv.FormatFloat(v.Float(), 'f', -1, 64)}}
 		}
 	case reflect.Complex64, reflect.Complex128:
 		bitSize := 64
 		if t.Kind() == reflect.Complex128 {
 			bitSize = 128
 		}
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return []Pair{{key, strconv.FormatComplex(v.Complex(), 'f', -1, bitSize)}}, nil
+		return func(key string, v reflect.Value) []Pair {
+			return []Pair{{key, strconv.FormatComplex(v.Complex(), 'f', -1, bitSize)}}
 		}
 	default:
-		return func(key string, v reflect.Value) ([]Pair, error) {
-			return nil, nil
+		return func(key string, v reflect.Value) []Pair {
+			return nil
 		}
 	}
 }
@@ -376,14 +301,15 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 	f, _ := t.FieldByName("Value")
 	enc := e.typeEncoder(f.Type)
 
-	return func(key string, value reflect.Value) ([]Pair, error) {
+	return func(key string, value reflect.Value) []Pair {
 		present := value.FieldByName("Present")
 		if !present.Bool() {
-			return nil, nil
+			return nil
 		}
 		null := value.FieldByName("Null")
 		if null.Bool() {
-			return nil, fmt.Errorf("apiquery: field cannot be null")
+			// TODO: Error?
+			return nil
 		}
 		raw := value.FieldByName("Raw")
 		if !raw.IsNil() {
@@ -393,21 +319,21 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
-func (e *encoder) newTimeTypeEncoder(_ reflect.Type) encoderFunc {
+func (e *encoder) newTimeTypeEncoder(t reflect.Type) encoderFunc {
 	format := e.dateFormat
-	return func(key string, value reflect.Value) ([]Pair, error) {
+	return func(key string, value reflect.Value) []Pair {
 		return []Pair{{
 			key,
 			value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format),
-		}}, nil
+		}}
 	}
 }
 
 func (e encoder) newInterfaceEncoder() encoderFunc {
-	return func(key string, value reflect.Value) ([]Pair, error) {
+	return func(key string, value reflect.Value) []Pair {
 		value = value.Elem()
 		if !value.IsValid() {
-			return nil, nil
+			return nil
 		}
 		return e.typeEncoder(value.Type())(key, value)
 	}

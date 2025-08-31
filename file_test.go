@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/internal/testutil"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
+	"github.com/sst/opencode-sdk-go/internal/testutil"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
 func TestFileList(t *testing.T) {
@@ -24,34 +24,10 @@ func TestFileList(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.File.List(context.TODO(), opencode.FileListParams{
-		Path: "path",
+		Path: opencode.F("path"),
 	})
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestFileGetStatus(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-	)
-	_, err := client.File.GetStatus(context.TODO())
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -72,11 +48,32 @@ func TestFileRead(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.File.Read(context.TODO(), opencode.FileReadParams{
-		Path: "path",
+		Path: opencode.F("path"),
 	})
+	if err != nil {
+		var apierr *opencode.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestFileStatus(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := opencode.NewClient(
+		option.WithBaseURL(baseURL),
+	)
+	_, err := client.File.Status(context.TODO())
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
