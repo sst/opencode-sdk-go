@@ -5,9 +5,12 @@ package opencode
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"reflect"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/apiquery"
+	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 	"github.com/tidwall/gjson"
@@ -33,10 +36,10 @@ func NewConfigService(opts ...option.RequestOption) (r *ConfigService) {
 }
 
 // Get config info
-func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (res *Config, err error) {
+func (r *ConfigService) Get(ctx context.Context, query ConfigGetParams, opts ...option.RequestOption) (res *Config, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "config"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -1967,4 +1970,16 @@ func (r McpRemoteConfigType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type ConfigGetParams struct {
+	Directory param.Field[string] `query:"directory"`
+}
+
+// URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.
+func (r ConfigGetParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
 }

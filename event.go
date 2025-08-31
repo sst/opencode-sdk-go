@@ -5,9 +5,12 @@ package opencode
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"reflect"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/apiquery"
+	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 	"github.com/sst/opencode-sdk-go/packages/ssestream"
@@ -35,7 +38,7 @@ func NewEventService(opts ...option.RequestOption) (r *EventService) {
 }
 
 // Get events
-func (r *EventService) ListStreaming(ctx context.Context, opts ...option.RequestOption) (stream *ssestream.Stream[EventListResponse]) {
+func (r *EventService) ListStreaming(ctx context.Context, query EventListParams, opts ...option.RequestOption) (stream *ssestream.Stream[EventListResponse]) {
 	var (
 		raw *http.Response
 		err error
@@ -43,7 +46,7 @@ func (r *EventService) ListStreaming(ctx context.Context, opts ...option.Request
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "text/event-stream")}, opts...)
 	path := "event"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
 	return ssestream.NewStream[EventListResponse](ssestream.NewDecoder(raw), err)
 }
 
@@ -1169,4 +1172,16 @@ func (r EventListResponseType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type EventListParams struct {
+	Directory param.Field[string] `query:"directory"`
+}
+
+// URLQuery serializes [EventListParams]'s query parameters as `url.Values`.
+func (r EventListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
 }
