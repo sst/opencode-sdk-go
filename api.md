@@ -87,6 +87,16 @@ Methods:
 
 - <code title="get /command">client.Command.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#CommandService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) ([]<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#Command">Command</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+# Project
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#Project">Project</a>
+
+Methods:
+
+- <code title="get /project">client.Project.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#ProjectService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) ([]<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#Project">Project</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Session
 
 Params Types:
