@@ -40,176 +40,6 @@ func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (
 	return
 }
 
-type AgentConfig struct {
-	// Description of when to use the agent
-	Description string                 `json:"description"`
-	Disable     bool                   `json:"disable"`
-	Mode        AgentConfigMode        `json:"mode"`
-	Model       string                 `json:"model"`
-	Permission  AgentConfigPermission  `json:"permission"`
-	Prompt      string                 `json:"prompt"`
-	Temperature float64                `json:"temperature"`
-	Tools       map[string]bool        `json:"tools"`
-	TopP        float64                `json:"top_p"`
-	ExtraFields map[string]interface{} `json:"-,extras"`
-	JSON        agentConfigJSON        `json:"-"`
-}
-
-// agentConfigJSON contains the JSON metadata for the struct [AgentConfig]
-type agentConfigJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AgentConfig) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentConfigJSON) RawJSON() string {
-	return r.raw
-}
-
-type AgentConfigMode string
-
-const (
-	AgentConfigModeSubagent AgentConfigMode = "subagent"
-	AgentConfigModePrimary  AgentConfigMode = "primary"
-	AgentConfigModeAll      AgentConfigMode = "all"
-)
-
-func (r AgentConfigMode) IsKnown() bool {
-	switch r {
-	case AgentConfigModeSubagent, AgentConfigModePrimary, AgentConfigModeAll:
-		return true
-	}
-	return false
-}
-
-type AgentConfigPermission struct {
-	Bash     AgentConfigPermissionBashUnion `json:"bash"`
-	Edit     AgentConfigPermissionEdit      `json:"edit"`
-	Webfetch AgentConfigPermissionWebfetch  `json:"webfetch"`
-	JSON     agentConfigPermissionJSON      `json:"-"`
-}
-
-// agentConfigPermissionJSON contains the JSON metadata for the struct
-// [AgentConfigPermission]
-type agentConfigPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AgentConfigPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentConfigPermissionJSON) RawJSON() string {
-	return r.raw
-}
-
-// Union satisfied by [AgentConfigPermissionBashString] or
-// [AgentConfigPermissionBashMap].
-type AgentConfigPermissionBashUnion interface {
-	implementsAgentConfigPermissionBashUnion()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AgentConfigPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(AgentConfigPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AgentConfigPermissionBashMap{}),
-		},
-	)
-}
-
-type AgentConfigPermissionBashString string
-
-const (
-	AgentConfigPermissionBashStringAsk   AgentConfigPermissionBashString = "ask"
-	AgentConfigPermissionBashStringAllow AgentConfigPermissionBashString = "allow"
-	AgentConfigPermissionBashStringDeny  AgentConfigPermissionBashString = "deny"
-)
-
-func (r AgentConfigPermissionBashString) IsKnown() bool {
-	switch r {
-	case AgentConfigPermissionBashStringAsk, AgentConfigPermissionBashStringAllow, AgentConfigPermissionBashStringDeny:
-		return true
-	}
-	return false
-}
-
-func (r AgentConfigPermissionBashString) implementsAgentConfigPermissionBashUnion() {}
-
-type AgentConfigPermissionBashMap map[string]AgentConfigPermissionBashMapItem
-
-func (r AgentConfigPermissionBashMap) implementsAgentConfigPermissionBashUnion() {}
-
-type AgentConfigPermissionBashMapItem string
-
-const (
-	AgentConfigPermissionBashMapAsk   AgentConfigPermissionBashMapItem = "ask"
-	AgentConfigPermissionBashMapAllow AgentConfigPermissionBashMapItem = "allow"
-	AgentConfigPermissionBashMapDeny  AgentConfigPermissionBashMapItem = "deny"
-)
-
-func (r AgentConfigPermissionBashMapItem) IsKnown() bool {
-	switch r {
-	case AgentConfigPermissionBashMapAsk, AgentConfigPermissionBashMapAllow, AgentConfigPermissionBashMapDeny:
-		return true
-	}
-	return false
-}
-
-type AgentConfigPermissionEdit string
-
-const (
-	AgentConfigPermissionEditAsk   AgentConfigPermissionEdit = "ask"
-	AgentConfigPermissionEditAllow AgentConfigPermissionEdit = "allow"
-	AgentConfigPermissionEditDeny  AgentConfigPermissionEdit = "deny"
-)
-
-func (r AgentConfigPermissionEdit) IsKnown() bool {
-	switch r {
-	case AgentConfigPermissionEditAsk, AgentConfigPermissionEditAllow, AgentConfigPermissionEditDeny:
-		return true
-	}
-	return false
-}
-
-type AgentConfigPermissionWebfetch string
-
-const (
-	AgentConfigPermissionWebfetchAsk   AgentConfigPermissionWebfetch = "ask"
-	AgentConfigPermissionWebfetchAllow AgentConfigPermissionWebfetch = "allow"
-	AgentConfigPermissionWebfetchDeny  AgentConfigPermissionWebfetch = "deny"
-)
-
-func (r AgentConfigPermissionWebfetch) IsKnown() bool {
-	switch r {
-	case AgentConfigPermissionWebfetchAsk, AgentConfigPermissionWebfetchAllow, AgentConfigPermissionWebfetchDeny:
-		return true
-	}
-	return false
-}
-
 type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema"`
@@ -301,10 +131,10 @@ func (r configJSON) RawJSON() string {
 
 // Agent configuration, see https://opencode.ai/docs/agent
 type ConfigAgent struct {
-	Build       AgentConfig            `json:"build"`
-	General     AgentConfig            `json:"general"`
-	Plan        AgentConfig            `json:"plan"`
-	ExtraFields map[string]AgentConfig `json:"-,extras"`
+	Build       ConfigAgentBuild       `json:"build"`
+	General     ConfigAgentGeneral     `json:"general"`
+	Plan        ConfigAgentPlan        `json:"plan"`
+	ExtraFields map[string]ConfigAgent `json:"-,extras"`
 	JSON        configAgentJSON        `json:"-"`
 }
 
@@ -323,6 +153,518 @@ func (r *ConfigAgent) UnmarshalJSON(data []byte) (err error) {
 
 func (r configAgentJSON) RawJSON() string {
 	return r.raw
+}
+
+type ConfigAgentBuild struct {
+	// Description of when to use the agent
+	Description string                     `json:"description"`
+	Disable     bool                       `json:"disable"`
+	Mode        ConfigAgentBuildMode       `json:"mode"`
+	Model       string                     `json:"model"`
+	Permission  ConfigAgentBuildPermission `json:"permission"`
+	Prompt      string                     `json:"prompt"`
+	Temperature float64                    `json:"temperature"`
+	Tools       map[string]bool            `json:"tools"`
+	TopP        float64                    `json:"top_p"`
+	ExtraFields map[string]interface{}     `json:"-,extras"`
+	JSON        configAgentBuildJSON       `json:"-"`
+}
+
+// configAgentBuildJSON contains the JSON metadata for the struct
+// [ConfigAgentBuild]
+type configAgentBuildJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentBuild) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentBuildJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigAgentBuildMode string
+
+const (
+	ConfigAgentBuildModeSubagent ConfigAgentBuildMode = "subagent"
+	ConfigAgentBuildModePrimary  ConfigAgentBuildMode = "primary"
+	ConfigAgentBuildModeAll      ConfigAgentBuildMode = "all"
+)
+
+func (r ConfigAgentBuildMode) IsKnown() bool {
+	switch r {
+	case ConfigAgentBuildModeSubagent, ConfigAgentBuildModePrimary, ConfigAgentBuildModeAll:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentBuildPermission struct {
+	Bash     ConfigAgentBuildPermissionBashUnion `json:"bash"`
+	Edit     ConfigAgentBuildPermissionEdit      `json:"edit"`
+	Webfetch ConfigAgentBuildPermissionWebfetch  `json:"webfetch"`
+	JSON     configAgentBuildPermissionJSON      `json:"-"`
+}
+
+// configAgentBuildPermissionJSON contains the JSON metadata for the struct
+// [ConfigAgentBuildPermission]
+type configAgentBuildPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentBuildPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentBuildPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigAgentBuildPermissionBashString] or
+// [ConfigAgentBuildPermissionBashMap].
+type ConfigAgentBuildPermissionBashUnion interface {
+	implementsConfigAgentBuildPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigAgentBuildPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigAgentBuildPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigAgentBuildPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigAgentBuildPermissionBashString string
+
+const (
+	ConfigAgentBuildPermissionBashStringAsk   ConfigAgentBuildPermissionBashString = "ask"
+	ConfigAgentBuildPermissionBashStringAllow ConfigAgentBuildPermissionBashString = "allow"
+	ConfigAgentBuildPermissionBashStringDeny  ConfigAgentBuildPermissionBashString = "deny"
+)
+
+func (r ConfigAgentBuildPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigAgentBuildPermissionBashStringAsk, ConfigAgentBuildPermissionBashStringAllow, ConfigAgentBuildPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigAgentBuildPermissionBashString) implementsConfigAgentBuildPermissionBashUnion() {}
+
+type ConfigAgentBuildPermissionBashMap map[string]ConfigAgentBuildPermissionBashMapItem
+
+func (r ConfigAgentBuildPermissionBashMap) implementsConfigAgentBuildPermissionBashUnion() {}
+
+type ConfigAgentBuildPermissionBashMapItem string
+
+const (
+	ConfigAgentBuildPermissionBashMapAsk   ConfigAgentBuildPermissionBashMapItem = "ask"
+	ConfigAgentBuildPermissionBashMapAllow ConfigAgentBuildPermissionBashMapItem = "allow"
+	ConfigAgentBuildPermissionBashMapDeny  ConfigAgentBuildPermissionBashMapItem = "deny"
+)
+
+func (r ConfigAgentBuildPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigAgentBuildPermissionBashMapAsk, ConfigAgentBuildPermissionBashMapAllow, ConfigAgentBuildPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentBuildPermissionEdit string
+
+const (
+	ConfigAgentBuildPermissionEditAsk   ConfigAgentBuildPermissionEdit = "ask"
+	ConfigAgentBuildPermissionEditAllow ConfigAgentBuildPermissionEdit = "allow"
+	ConfigAgentBuildPermissionEditDeny  ConfigAgentBuildPermissionEdit = "deny"
+)
+
+func (r ConfigAgentBuildPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigAgentBuildPermissionEditAsk, ConfigAgentBuildPermissionEditAllow, ConfigAgentBuildPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentBuildPermissionWebfetch string
+
+const (
+	ConfigAgentBuildPermissionWebfetchAsk   ConfigAgentBuildPermissionWebfetch = "ask"
+	ConfigAgentBuildPermissionWebfetchAllow ConfigAgentBuildPermissionWebfetch = "allow"
+	ConfigAgentBuildPermissionWebfetchDeny  ConfigAgentBuildPermissionWebfetch = "deny"
+)
+
+func (r ConfigAgentBuildPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigAgentBuildPermissionWebfetchAsk, ConfigAgentBuildPermissionWebfetchAllow, ConfigAgentBuildPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentGeneral struct {
+	// Description of when to use the agent
+	Description string                       `json:"description"`
+	Disable     bool                         `json:"disable"`
+	Mode        ConfigAgentGeneralMode       `json:"mode"`
+	Model       string                       `json:"model"`
+	Permission  ConfigAgentGeneralPermission `json:"permission"`
+	Prompt      string                       `json:"prompt"`
+	Temperature float64                      `json:"temperature"`
+	Tools       map[string]bool              `json:"tools"`
+	TopP        float64                      `json:"top_p"`
+	ExtraFields map[string]interface{}       `json:"-,extras"`
+	JSON        configAgentGeneralJSON       `json:"-"`
+}
+
+// configAgentGeneralJSON contains the JSON metadata for the struct
+// [ConfigAgentGeneral]
+type configAgentGeneralJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentGeneral) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentGeneralJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigAgentGeneralMode string
+
+const (
+	ConfigAgentGeneralModeSubagent ConfigAgentGeneralMode = "subagent"
+	ConfigAgentGeneralModePrimary  ConfigAgentGeneralMode = "primary"
+	ConfigAgentGeneralModeAll      ConfigAgentGeneralMode = "all"
+)
+
+func (r ConfigAgentGeneralMode) IsKnown() bool {
+	switch r {
+	case ConfigAgentGeneralModeSubagent, ConfigAgentGeneralModePrimary, ConfigAgentGeneralModeAll:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentGeneralPermission struct {
+	Bash     ConfigAgentGeneralPermissionBashUnion `json:"bash"`
+	Edit     ConfigAgentGeneralPermissionEdit      `json:"edit"`
+	Webfetch ConfigAgentGeneralPermissionWebfetch  `json:"webfetch"`
+	JSON     configAgentGeneralPermissionJSON      `json:"-"`
+}
+
+// configAgentGeneralPermissionJSON contains the JSON metadata for the struct
+// [ConfigAgentGeneralPermission]
+type configAgentGeneralPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentGeneralPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentGeneralPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigAgentGeneralPermissionBashString] or
+// [ConfigAgentGeneralPermissionBashMap].
+type ConfigAgentGeneralPermissionBashUnion interface {
+	implementsConfigAgentGeneralPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigAgentGeneralPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigAgentGeneralPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigAgentGeneralPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigAgentGeneralPermissionBashString string
+
+const (
+	ConfigAgentGeneralPermissionBashStringAsk   ConfigAgentGeneralPermissionBashString = "ask"
+	ConfigAgentGeneralPermissionBashStringAllow ConfigAgentGeneralPermissionBashString = "allow"
+	ConfigAgentGeneralPermissionBashStringDeny  ConfigAgentGeneralPermissionBashString = "deny"
+)
+
+func (r ConfigAgentGeneralPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigAgentGeneralPermissionBashStringAsk, ConfigAgentGeneralPermissionBashStringAllow, ConfigAgentGeneralPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigAgentGeneralPermissionBashString) implementsConfigAgentGeneralPermissionBashUnion() {}
+
+type ConfigAgentGeneralPermissionBashMap map[string]ConfigAgentGeneralPermissionBashMapItem
+
+func (r ConfigAgentGeneralPermissionBashMap) implementsConfigAgentGeneralPermissionBashUnion() {}
+
+type ConfigAgentGeneralPermissionBashMapItem string
+
+const (
+	ConfigAgentGeneralPermissionBashMapAsk   ConfigAgentGeneralPermissionBashMapItem = "ask"
+	ConfigAgentGeneralPermissionBashMapAllow ConfigAgentGeneralPermissionBashMapItem = "allow"
+	ConfigAgentGeneralPermissionBashMapDeny  ConfigAgentGeneralPermissionBashMapItem = "deny"
+)
+
+func (r ConfigAgentGeneralPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigAgentGeneralPermissionBashMapAsk, ConfigAgentGeneralPermissionBashMapAllow, ConfigAgentGeneralPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentGeneralPermissionEdit string
+
+const (
+	ConfigAgentGeneralPermissionEditAsk   ConfigAgentGeneralPermissionEdit = "ask"
+	ConfigAgentGeneralPermissionEditAllow ConfigAgentGeneralPermissionEdit = "allow"
+	ConfigAgentGeneralPermissionEditDeny  ConfigAgentGeneralPermissionEdit = "deny"
+)
+
+func (r ConfigAgentGeneralPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigAgentGeneralPermissionEditAsk, ConfigAgentGeneralPermissionEditAllow, ConfigAgentGeneralPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentGeneralPermissionWebfetch string
+
+const (
+	ConfigAgentGeneralPermissionWebfetchAsk   ConfigAgentGeneralPermissionWebfetch = "ask"
+	ConfigAgentGeneralPermissionWebfetchAllow ConfigAgentGeneralPermissionWebfetch = "allow"
+	ConfigAgentGeneralPermissionWebfetchDeny  ConfigAgentGeneralPermissionWebfetch = "deny"
+)
+
+func (r ConfigAgentGeneralPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigAgentGeneralPermissionWebfetchAsk, ConfigAgentGeneralPermissionWebfetchAllow, ConfigAgentGeneralPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentPlan struct {
+	// Description of when to use the agent
+	Description string                    `json:"description"`
+	Disable     bool                      `json:"disable"`
+	Mode        ConfigAgentPlanMode       `json:"mode"`
+	Model       string                    `json:"model"`
+	Permission  ConfigAgentPlanPermission `json:"permission"`
+	Prompt      string                    `json:"prompt"`
+	Temperature float64                   `json:"temperature"`
+	Tools       map[string]bool           `json:"tools"`
+	TopP        float64                   `json:"top_p"`
+	ExtraFields map[string]interface{}    `json:"-,extras"`
+	JSON        configAgentPlanJSON       `json:"-"`
+}
+
+// configAgentPlanJSON contains the JSON metadata for the struct [ConfigAgentPlan]
+type configAgentPlanJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentPlan) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentPlanJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigAgentPlanMode string
+
+const (
+	ConfigAgentPlanModeSubagent ConfigAgentPlanMode = "subagent"
+	ConfigAgentPlanModePrimary  ConfigAgentPlanMode = "primary"
+	ConfigAgentPlanModeAll      ConfigAgentPlanMode = "all"
+)
+
+func (r ConfigAgentPlanMode) IsKnown() bool {
+	switch r {
+	case ConfigAgentPlanModeSubagent, ConfigAgentPlanModePrimary, ConfigAgentPlanModeAll:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentPlanPermission struct {
+	Bash     ConfigAgentPlanPermissionBashUnion `json:"bash"`
+	Edit     ConfigAgentPlanPermissionEdit      `json:"edit"`
+	Webfetch ConfigAgentPlanPermissionWebfetch  `json:"webfetch"`
+	JSON     configAgentPlanPermissionJSON      `json:"-"`
+}
+
+// configAgentPlanPermissionJSON contains the JSON metadata for the struct
+// [ConfigAgentPlanPermission]
+type configAgentPlanPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgentPlanPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configAgentPlanPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigAgentPlanPermissionBashString] or
+// [ConfigAgentPlanPermissionBashMap].
+type ConfigAgentPlanPermissionBashUnion interface {
+	implementsConfigAgentPlanPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigAgentPlanPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigAgentPlanPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigAgentPlanPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigAgentPlanPermissionBashString string
+
+const (
+	ConfigAgentPlanPermissionBashStringAsk   ConfigAgentPlanPermissionBashString = "ask"
+	ConfigAgentPlanPermissionBashStringAllow ConfigAgentPlanPermissionBashString = "allow"
+	ConfigAgentPlanPermissionBashStringDeny  ConfigAgentPlanPermissionBashString = "deny"
+)
+
+func (r ConfigAgentPlanPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigAgentPlanPermissionBashStringAsk, ConfigAgentPlanPermissionBashStringAllow, ConfigAgentPlanPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigAgentPlanPermissionBashString) implementsConfigAgentPlanPermissionBashUnion() {}
+
+type ConfigAgentPlanPermissionBashMap map[string]ConfigAgentPlanPermissionBashMapItem
+
+func (r ConfigAgentPlanPermissionBashMap) implementsConfigAgentPlanPermissionBashUnion() {}
+
+type ConfigAgentPlanPermissionBashMapItem string
+
+const (
+	ConfigAgentPlanPermissionBashMapAsk   ConfigAgentPlanPermissionBashMapItem = "ask"
+	ConfigAgentPlanPermissionBashMapAllow ConfigAgentPlanPermissionBashMapItem = "allow"
+	ConfigAgentPlanPermissionBashMapDeny  ConfigAgentPlanPermissionBashMapItem = "deny"
+)
+
+func (r ConfigAgentPlanPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigAgentPlanPermissionBashMapAsk, ConfigAgentPlanPermissionBashMapAllow, ConfigAgentPlanPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentPlanPermissionEdit string
+
+const (
+	ConfigAgentPlanPermissionEditAsk   ConfigAgentPlanPermissionEdit = "ask"
+	ConfigAgentPlanPermissionEditAllow ConfigAgentPlanPermissionEdit = "allow"
+	ConfigAgentPlanPermissionEditDeny  ConfigAgentPlanPermissionEdit = "deny"
+)
+
+func (r ConfigAgentPlanPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigAgentPlanPermissionEditAsk, ConfigAgentPlanPermissionEditAllow, ConfigAgentPlanPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigAgentPlanPermissionWebfetch string
+
+const (
+	ConfigAgentPlanPermissionWebfetchAsk   ConfigAgentPlanPermissionWebfetch = "ask"
+	ConfigAgentPlanPermissionWebfetchAllow ConfigAgentPlanPermissionWebfetch = "allow"
+	ConfigAgentPlanPermissionWebfetchDeny  ConfigAgentPlanPermissionWebfetch = "deny"
+)
+
+func (r ConfigAgentPlanPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigAgentPlanPermissionWebfetchAsk, ConfigAgentPlanPermissionWebfetchAllow, ConfigAgentPlanPermissionWebfetchDeny:
+		return true
+	}
+	return false
 }
 
 type ConfigCommand struct {
@@ -706,10 +1048,10 @@ func (r ConfigMcpType) IsKnown() bool {
 
 // @deprecated Use `agent` field instead.
 type ConfigMode struct {
-	Build       AgentConfig            `json:"build"`
-	Plan        AgentConfig            `json:"plan"`
-	ExtraFields map[string]AgentConfig `json:"-,extras"`
-	JSON        configModeJSON         `json:"-"`
+	Build       ConfigModeBuild       `json:"build"`
+	Plan        ConfigModePlan        `json:"plan"`
+	ExtraFields map[string]ConfigMode `json:"-,extras"`
+	JSON        configModeJSON        `json:"-"`
 }
 
 // configModeJSON contains the JSON metadata for the struct [ConfigMode]
@@ -726,6 +1068,346 @@ func (r *ConfigMode) UnmarshalJSON(data []byte) (err error) {
 
 func (r configModeJSON) RawJSON() string {
 	return r.raw
+}
+
+type ConfigModeBuild struct {
+	// Description of when to use the agent
+	Description string                    `json:"description"`
+	Disable     bool                      `json:"disable"`
+	Mode        ConfigModeBuildMode       `json:"mode"`
+	Model       string                    `json:"model"`
+	Permission  ConfigModeBuildPermission `json:"permission"`
+	Prompt      string                    `json:"prompt"`
+	Temperature float64                   `json:"temperature"`
+	Tools       map[string]bool           `json:"tools"`
+	TopP        float64                   `json:"top_p"`
+	ExtraFields map[string]interface{}    `json:"-,extras"`
+	JSON        configModeBuildJSON       `json:"-"`
+}
+
+// configModeBuildJSON contains the JSON metadata for the struct [ConfigModeBuild]
+type configModeBuildJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigModeBuild) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configModeBuildJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigModeBuildMode string
+
+const (
+	ConfigModeBuildModeSubagent ConfigModeBuildMode = "subagent"
+	ConfigModeBuildModePrimary  ConfigModeBuildMode = "primary"
+	ConfigModeBuildModeAll      ConfigModeBuildMode = "all"
+)
+
+func (r ConfigModeBuildMode) IsKnown() bool {
+	switch r {
+	case ConfigModeBuildModeSubagent, ConfigModeBuildModePrimary, ConfigModeBuildModeAll:
+		return true
+	}
+	return false
+}
+
+type ConfigModeBuildPermission struct {
+	Bash     ConfigModeBuildPermissionBashUnion `json:"bash"`
+	Edit     ConfigModeBuildPermissionEdit      `json:"edit"`
+	Webfetch ConfigModeBuildPermissionWebfetch  `json:"webfetch"`
+	JSON     configModeBuildPermissionJSON      `json:"-"`
+}
+
+// configModeBuildPermissionJSON contains the JSON metadata for the struct
+// [ConfigModeBuildPermission]
+type configModeBuildPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigModeBuildPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configModeBuildPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigModeBuildPermissionBashString] or
+// [ConfigModeBuildPermissionBashMap].
+type ConfigModeBuildPermissionBashUnion interface {
+	implementsConfigModeBuildPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigModeBuildPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigModeBuildPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigModeBuildPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigModeBuildPermissionBashString string
+
+const (
+	ConfigModeBuildPermissionBashStringAsk   ConfigModeBuildPermissionBashString = "ask"
+	ConfigModeBuildPermissionBashStringAllow ConfigModeBuildPermissionBashString = "allow"
+	ConfigModeBuildPermissionBashStringDeny  ConfigModeBuildPermissionBashString = "deny"
+)
+
+func (r ConfigModeBuildPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigModeBuildPermissionBashStringAsk, ConfigModeBuildPermissionBashStringAllow, ConfigModeBuildPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigModeBuildPermissionBashString) implementsConfigModeBuildPermissionBashUnion() {}
+
+type ConfigModeBuildPermissionBashMap map[string]ConfigModeBuildPermissionBashMapItem
+
+func (r ConfigModeBuildPermissionBashMap) implementsConfigModeBuildPermissionBashUnion() {}
+
+type ConfigModeBuildPermissionBashMapItem string
+
+const (
+	ConfigModeBuildPermissionBashMapAsk   ConfigModeBuildPermissionBashMapItem = "ask"
+	ConfigModeBuildPermissionBashMapAllow ConfigModeBuildPermissionBashMapItem = "allow"
+	ConfigModeBuildPermissionBashMapDeny  ConfigModeBuildPermissionBashMapItem = "deny"
+)
+
+func (r ConfigModeBuildPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigModeBuildPermissionBashMapAsk, ConfigModeBuildPermissionBashMapAllow, ConfigModeBuildPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigModeBuildPermissionEdit string
+
+const (
+	ConfigModeBuildPermissionEditAsk   ConfigModeBuildPermissionEdit = "ask"
+	ConfigModeBuildPermissionEditAllow ConfigModeBuildPermissionEdit = "allow"
+	ConfigModeBuildPermissionEditDeny  ConfigModeBuildPermissionEdit = "deny"
+)
+
+func (r ConfigModeBuildPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigModeBuildPermissionEditAsk, ConfigModeBuildPermissionEditAllow, ConfigModeBuildPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigModeBuildPermissionWebfetch string
+
+const (
+	ConfigModeBuildPermissionWebfetchAsk   ConfigModeBuildPermissionWebfetch = "ask"
+	ConfigModeBuildPermissionWebfetchAllow ConfigModeBuildPermissionWebfetch = "allow"
+	ConfigModeBuildPermissionWebfetchDeny  ConfigModeBuildPermissionWebfetch = "deny"
+)
+
+func (r ConfigModeBuildPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigModeBuildPermissionWebfetchAsk, ConfigModeBuildPermissionWebfetchAllow, ConfigModeBuildPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigModePlan struct {
+	// Description of when to use the agent
+	Description string                   `json:"description"`
+	Disable     bool                     `json:"disable"`
+	Mode        ConfigModePlanMode       `json:"mode"`
+	Model       string                   `json:"model"`
+	Permission  ConfigModePlanPermission `json:"permission"`
+	Prompt      string                   `json:"prompt"`
+	Temperature float64                  `json:"temperature"`
+	Tools       map[string]bool          `json:"tools"`
+	TopP        float64                  `json:"top_p"`
+	ExtraFields map[string]interface{}   `json:"-,extras"`
+	JSON        configModePlanJSON       `json:"-"`
+}
+
+// configModePlanJSON contains the JSON metadata for the struct [ConfigModePlan]
+type configModePlanJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigModePlan) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configModePlanJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigModePlanMode string
+
+const (
+	ConfigModePlanModeSubagent ConfigModePlanMode = "subagent"
+	ConfigModePlanModePrimary  ConfigModePlanMode = "primary"
+	ConfigModePlanModeAll      ConfigModePlanMode = "all"
+)
+
+func (r ConfigModePlanMode) IsKnown() bool {
+	switch r {
+	case ConfigModePlanModeSubagent, ConfigModePlanModePrimary, ConfigModePlanModeAll:
+		return true
+	}
+	return false
+}
+
+type ConfigModePlanPermission struct {
+	Bash     ConfigModePlanPermissionBashUnion `json:"bash"`
+	Edit     ConfigModePlanPermissionEdit      `json:"edit"`
+	Webfetch ConfigModePlanPermissionWebfetch  `json:"webfetch"`
+	JSON     configModePlanPermissionJSON      `json:"-"`
+}
+
+// configModePlanPermissionJSON contains the JSON metadata for the struct
+// [ConfigModePlanPermission]
+type configModePlanPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigModePlanPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configModePlanPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigModePlanPermissionBashString] or
+// [ConfigModePlanPermissionBashMap].
+type ConfigModePlanPermissionBashUnion interface {
+	implementsConfigModePlanPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigModePlanPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigModePlanPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigModePlanPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigModePlanPermissionBashString string
+
+const (
+	ConfigModePlanPermissionBashStringAsk   ConfigModePlanPermissionBashString = "ask"
+	ConfigModePlanPermissionBashStringAllow ConfigModePlanPermissionBashString = "allow"
+	ConfigModePlanPermissionBashStringDeny  ConfigModePlanPermissionBashString = "deny"
+)
+
+func (r ConfigModePlanPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigModePlanPermissionBashStringAsk, ConfigModePlanPermissionBashStringAllow, ConfigModePlanPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigModePlanPermissionBashString) implementsConfigModePlanPermissionBashUnion() {}
+
+type ConfigModePlanPermissionBashMap map[string]ConfigModePlanPermissionBashMapItem
+
+func (r ConfigModePlanPermissionBashMap) implementsConfigModePlanPermissionBashUnion() {}
+
+type ConfigModePlanPermissionBashMapItem string
+
+const (
+	ConfigModePlanPermissionBashMapAsk   ConfigModePlanPermissionBashMapItem = "ask"
+	ConfigModePlanPermissionBashMapAllow ConfigModePlanPermissionBashMapItem = "allow"
+	ConfigModePlanPermissionBashMapDeny  ConfigModePlanPermissionBashMapItem = "deny"
+)
+
+func (r ConfigModePlanPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigModePlanPermissionBashMapAsk, ConfigModePlanPermissionBashMapAllow, ConfigModePlanPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigModePlanPermissionEdit string
+
+const (
+	ConfigModePlanPermissionEditAsk   ConfigModePlanPermissionEdit = "ask"
+	ConfigModePlanPermissionEditAllow ConfigModePlanPermissionEdit = "allow"
+	ConfigModePlanPermissionEditDeny  ConfigModePlanPermissionEdit = "deny"
+)
+
+func (r ConfigModePlanPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigModePlanPermissionEditAsk, ConfigModePlanPermissionEditAllow, ConfigModePlanPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigModePlanPermissionWebfetch string
+
+const (
+	ConfigModePlanPermissionWebfetchAsk   ConfigModePlanPermissionWebfetch = "ask"
+	ConfigModePlanPermissionWebfetchAllow ConfigModePlanPermissionWebfetch = "allow"
+	ConfigModePlanPermissionWebfetchDeny  ConfigModePlanPermissionWebfetch = "deny"
+)
+
+func (r ConfigModePlanPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigModePlanPermissionWebfetchAsk, ConfigModePlanPermissionWebfetchAllow, ConfigModePlanPermissionWebfetchDeny:
+		return true
+	}
+	return false
 }
 
 type ConfigPermission struct {
