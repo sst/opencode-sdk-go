@@ -1,6 +1,7 @@
 package apiquery
 
 import (
+	"github.com/stainless-sdks/opencode-go/packages/param"
 	"net/url"
 	"testing"
 	"time"
@@ -27,8 +28,8 @@ type PrimitivePointers struct {
 }
 
 type Slices struct {
-	Slice []Primitives  `query:"slices"`
-	Mixed []interface{} `query:"mixed"`
+	Slice []Primitives `query:"slices"`
+	Mixed []any        `query:"mixed"`
 }
 
 type DateTime struct {
@@ -37,8 +38,8 @@ type DateTime struct {
 }
 
 type AdditionalProperties struct {
-	A      bool                   `query:"a"`
-	Extras map[string]interface{} `query:"-,inline"`
+	A      bool           `query:"a"`
+	Extras map[string]any `query:"-,inline"`
 }
 
 type Recursive struct {
@@ -47,7 +48,7 @@ type Recursive struct {
 }
 
 type UnknownStruct struct {
-	Unknown interface{} `query:"unknown"`
+	Unknown any `query:"unknown"`
 }
 
 type UnionStruct struct {
@@ -101,9 +102,35 @@ type DeeplyNested3 struct {
 	D *string `query:"d"`
 }
 
+type RichPrimitives struct {
+	A param.Opt[string] `query:"a"`
+}
+
+type QueryOmitTest struct {
+	A param.Opt[string] `query:"a,omitzero"`
+	B string            `query:"b,omitzero"`
+}
+
+type NamedEnum string
+
+const NamedEnumFoo NamedEnum = "foo"
+
+type StructUnionWrapper struct {
+	Union StructUnion `query:"union"`
+}
+
+type StructUnion struct {
+	OfInt    param.Opt[int64]     `query:",omitzero,inline"`
+	OfString param.Opt[string]    `query:",omitzero,inline"`
+	OfEnum   param.Opt[NamedEnum] `query:",omitzero,inline"`
+	OfA      UnionStructA         `query:",omitzero,inline"`
+	OfB      UnionStructB         `query:",omitzero,inline"`
+	param.APIUnion
+}
+
 var tests = map[string]struct {
 	enc      string
-	val      interface{}
+	val      any
 	settings QuerySettings
 }{
 	"primitives": {
@@ -119,7 +146,7 @@ var tests = map[string]struct {
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 			},
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatBrackets},
 	},
@@ -127,7 +154,7 @@ var tests = map[string]struct {
 	"slices_comma": {
 		`mixed=1,2.3,hello`,
 		Slices{
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatComma},
 	},
@@ -139,7 +166,7 @@ var tests = map[string]struct {
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 			},
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatRepeat},
 	},
@@ -170,7 +197,7 @@ var tests = map[string]struct {
 		`a=true&bar=value&foo=true`,
 		AdditionalProperties{
 			A: true,
-			Extras: map[string]interface{}{
+			Extras: map[string]any{
 				"bar": "value",
 				"foo": true,
 			},
@@ -201,7 +228,7 @@ var tests = map[string]struct {
 	"unknown_struct_map_brackets": {
 		`unknown[foo]=bar`,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},
@@ -211,17 +238,33 @@ var tests = map[string]struct {
 	"unknown_struct_map_dots": {
 		`unknown.foo=bar`,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},
 		QuerySettings{NestedFormat: NestedQueryFormatDots},
 	},
 
+	"struct_union_string": {
+		`union=hello`,
+		StructUnionWrapper{
+			Union: StructUnion{OfString: param.NewOpt("hello")},
+		},
+		QuerySettings{},
+	},
+
 	"union_string": {
 		`union=hello`,
 		UnionStruct{
 			Union: UnionString("hello"),
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_integer": {
+		`union=12`,
+		StructUnionWrapper{
+			Union: StructUnion{OfInt: param.NewOpt[int64](12)},
 		},
 		QuerySettings{},
 	},
@@ -234,6 +277,26 @@ var tests = map[string]struct {
 		QuerySettings{},
 	},
 
+	"struct_union_enum": {
+		`union=foo`,
+		StructUnionWrapper{
+			Union: StructUnion{OfEnum: param.NewOpt[NamedEnum](NamedEnumFoo)},
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_struct_discriminated_a": {
+		`union[a]=foo&union[b]=bar&union[type]=typeA`,
+		StructUnionWrapper{
+			Union: StructUnion{OfA: UnionStructA{
+				Type: "typeA",
+				A:    "foo",
+				B:    "bar",
+			}},
+		},
+		QuerySettings{},
+	},
+
 	"union_struct_discriminated_a": {
 		`union[a]=foo&union[b]=bar&union[type]=typeA`,
 		UnionStruct{
@@ -242,6 +305,17 @@ var tests = map[string]struct {
 				A:    "foo",
 				B:    "bar",
 			},
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_struct_discriminated_b": {
+		`union[a]=foo&union[type]=typeB`,
+		StructUnionWrapper{
+			Union: StructUnion{OfB: UnionStructB{
+				Type: "typeB",
+				A:    "foo",
+			}},
 		},
 		QuerySettings{},
 	},
@@ -320,12 +394,38 @@ var tests = map[string]struct {
 		},
 		QuerySettings{NestedFormat: NestedQueryFormatDots},
 	},
+
+	"rich_primitives": {
+		`a=hello`,
+		RichPrimitives{
+			A: param.Opt[string]{Value: "hello"},
+		},
+		QuerySettings{},
+	},
+
+	"rich_primitives_omit": {
+		``,
+		QueryOmitTest{
+			A: param.Opt[string]{},
+		},
+		QuerySettings{},
+	},
+	"query_omit": {
+		`a=hello`,
+		QueryOmitTest{
+			A: param.Opt[string]{Value: "hello"},
+		},
+		QuerySettings{},
+	},
 }
 
 func TestEncode(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			values := MarshalWithSettings(test.val, test.settings)
+			values, err := MarshalWithSettings(test.val, test.settings)
+			if err != nil {
+				t.Fatalf("failed to marshal url %s", err)
+			}
 			str, _ := url.QueryUnescape(values.Encode())
 			if str != test.enc {
 				t.Fatalf("expected %+#v to serialize to %s but got %s", test.val, test.enc, str)

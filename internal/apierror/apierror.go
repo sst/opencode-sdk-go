@@ -7,36 +7,33 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/stainless-sdks/opencode-go/internal/apijson"
+	"github.com/stainless-sdks/opencode-go/packages/respjson"
 )
 
 // Error represents an error that originates from the API, i.e. when a request is
 // made and the API returns a response with a HTTP status code. Other errors are
 // not wrapped by this SDK.
 type Error struct {
-	JSON       errorJSON `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 	StatusCode int
 	Request    *http.Request
 	Response   *http.Response
 }
 
-// errorJSON contains the JSON metadata for the struct [Error]
-type errorJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Error) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Error) RawJSON() string { return r.JSON.raw }
+func (r *Error) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r errorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *Error) Error() string {
 	// Attempt to re-populate the response body
-	return fmt.Sprintf("%s \"%s\": %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.RawJSON())
+	return fmt.Sprintf("%s %q: %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.raw)
 }
 
 func (r *Error) DumpRequest(body bool) []byte {

@@ -3,41 +3,14 @@
 package opencode
 
 import (
-	"github.com/sst/opencode-sdk-go/internal/apierror"
-	"github.com/sst/opencode-sdk-go/shared"
+	"github.com/stainless-sdks/opencode-go/internal/apierror"
+	"github.com/stainless-sdks/opencode-go/packages/param"
 )
 
+// aliased to make [param.APIUnion] private when embedding
+type paramUnion = param.APIUnion
+
+// aliased to make [param.APIObject] private when embedding
+type paramObj = param.APIObject
+
 type Error = apierror.Error
-
-// This is an alias to an internal type.
-type MessageAbortedError = shared.MessageAbortedError
-
-// This is an alias to an internal type.
-type MessageAbortedErrorName = shared.MessageAbortedErrorName
-
-// This is an alias to an internal value.
-const MessageAbortedErrorNameMessageAbortedError = shared.MessageAbortedErrorNameMessageAbortedError
-
-// This is an alias to an internal type.
-type ProviderAuthError = shared.ProviderAuthError
-
-// This is an alias to an internal type.
-type ProviderAuthErrorData = shared.ProviderAuthErrorData
-
-// This is an alias to an internal type.
-type ProviderAuthErrorName = shared.ProviderAuthErrorName
-
-// This is an alias to an internal value.
-const ProviderAuthErrorNameProviderAuthError = shared.ProviderAuthErrorNameProviderAuthError
-
-// This is an alias to an internal type.
-type UnknownError = shared.UnknownError
-
-// This is an alias to an internal type.
-type UnknownErrorData = shared.UnknownErrorData
-
-// This is an alias to an internal type.
-type UnknownErrorName = shared.UnknownErrorName
-
-// This is an alias to an internal value.
-const UnknownErrorNameUnknownError = shared.UnknownErrorNameUnknownError

@@ -39,8 +39,8 @@ type DateTime struct {
 }
 
 type AdditionalProperties struct {
-	A           bool                   `json:"a"`
-	ExtraFields map[string]interface{} `json:"-,extras"`
+	A           bool           `json:"a"`
+	ExtraFields map[string]any `json:"-,extras"`
 }
 
 type TypedAdditionalProperties struct {
@@ -64,8 +64,8 @@ type EmbeddedStructJSON struct {
 
 type EmbeddedStructs struct {
 	EmbeddedStruct
-	A           *int                   `json:"a"`
-	ExtraFields map[string]interface{} `json:"-,extras"`
+	A           *int           `json:"a"`
+	ExtraFields map[string]any `json:"-,extras"`
 
 	JSON EmbeddedStructsJSON
 }
@@ -86,8 +86,8 @@ type JSONFieldStruct struct {
 	B           int64               `json:"b"`
 	C           string              `json:"c"`
 	D           string              `json:"d"`
-	ExtraFields map[string]int64    `json:"-,extras"`
-	JSON        JSONFieldStructJSON `json:"-,metadata"`
+	ExtraFields map[string]int64    `json:",extras"`
+	JSON        JSONFieldStructJSON `json:",metadata"`
 }
 
 type JSONFieldStructJSON struct {
@@ -100,7 +100,7 @@ type JSONFieldStructJSON struct {
 }
 
 type UnknownStruct struct {
-	Unknown interface{} `json:"unknown"`
+	Unknown any `json:"unknown"`
 }
 
 type UnionStruct struct {
@@ -112,13 +112,13 @@ type Union interface {
 }
 
 type Inline struct {
-	InlineField Primitives `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
+	InlineField Primitives `json:",inline"`
+	JSON        InlineJSON `json:",metadata"`
 }
 
 type InlineArray struct {
-	InlineField []string   `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
+	InlineField []string   `json:",inline"`
+	JSON        InlineJSON `json:",metadata"`
 }
 
 type InlineJSON struct {
@@ -150,7 +150,7 @@ type UnionTime time.Time
 func (UnionTime) union() {}
 
 func init() {
-	RegisterUnion(reflect.TypeOf((*Union)(nil)).Elem(), "type",
+	RegisterUnion[Union]("type",
 		UnionVariant{
 			TypeFilter: gjson.String,
 			Type:       reflect.TypeOf(UnionTime{}),
@@ -237,7 +237,7 @@ func (r *UnmarshalStruct) UnmarshalJSON(json []byte) error {
 func (ComplexUnionTypeB) complexUnion() {}
 
 func init() {
-	RegisterUnion(reflect.TypeOf((*ComplexUnion)(nil)).Elem(), "",
+	RegisterUnion[ComplexUnion]("",
 		UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(ComplexUnionA{}),
@@ -300,8 +300,7 @@ func (r *MarshallingUnionB) UnmarshalJSON(data []byte) (err error) {
 }
 
 func init() {
-	RegisterUnion(
-		reflect.TypeOf((*MarshallingUnion)(nil)).Elem(),
+	RegisterUnion[MarshallingUnion](
 		"",
 		UnionVariant{
 			TypeFilter: gjson.JSON,
@@ -316,7 +315,7 @@ func init() {
 
 var tests = map[string]struct {
 	buf string
-	val interface{}
+	val any
 }{
 	"true":               {"true", true},
 	"false":              {"false", false},
@@ -363,7 +362,7 @@ var tests = map[string]struct {
 
 	"map_string":                       {`{"foo":"bar"}`, map[string]string{"foo": "bar"}},
 	"map_string_with_sjson_path_chars": {`{":a.b.c*:d*-1e.f":"bar"}`, map[string]string{":a.b.c*:d*-1e.f": "bar"}},
-	"map_interface":                    {`{"a":1,"b":"str","c":false}`, map[string]interface{}{"a": float64(1), "b": "str", "c": false}},
+	"map_interface":                    {`{"a":1,"b":"str","c":false}`, map[string]any{"a": float64(1), "b": "str", "c": false}},
 
 	"primitive_struct": {
 		`{"a":false,"b":237628372683,"c":654,"d":9999.43,"e":43.76,"f":[1,2,3,4]}`,
@@ -401,7 +400,7 @@ var tests = map[string]struct {
 		`{"a":true,"bar":"value","foo":true}`,
 		AdditionalProperties{
 			A: true,
-			ExtraFields: map[string]interface{}{
+			ExtraFields: map[string]any{
 				"bar": "value",
 				"foo": true,
 			},
@@ -421,7 +420,7 @@ var tests = map[string]struct {
 				},
 			},
 			A:           P(1),
-			ExtraFields: map[string]interface{}{"b": "bar"},
+			ExtraFields: map[string]any{"b": "bar"},
 			JSON: EmbeddedStructsJSON{
 				A: Field{raw: `1`, status: valid},
 				ExtraFields: map[string]Field{
@@ -477,7 +476,7 @@ var tests = map[string]struct {
 	"unknown_struct_map": {
 		`{"unknown":{"foo":"bar"}}`,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},

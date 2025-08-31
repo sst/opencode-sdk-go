@@ -1,9 +1,13 @@
+// The deserialization algorithm from apijson may be subject to improvements
+// between minor versions, particularly with respect to calling [json.Unmarshal]
+// into param unions.
+
 package apijson
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/stainless-sdks/opencode-go/packages/param"
 	"reflect"
 	"strconv"
 	"sync"
@@ -46,6 +50,7 @@ type decoderBuilder struct {
 type decoderState struct {
 	strict    bool
 	exactness exactness
+	validator *validationEntry
 }
 
 // Exactness refers to how close to the type the result was if deserialization
@@ -89,6 +94,18 @@ func (d *decoderBuilder) unmarshal(raw []byte, to any) error {
 	return d.typeDecoder(value.Type())(result, value, &decoderState{strict: false, exactness: exact})
 }
 
+// unmarshalWithExactness is used for internal testing purposes.
+func (d *decoderBuilder) unmarshalWithExactness(raw []byte, to any) (exactness, error) {
+	value := reflect.ValueOf(to).Elem()
+	result := gjson.ParseBytes(raw)
+	if !value.IsValid() {
+		return 0, fmt.Errorf("apijson: cannot marshal into invalid value")
+	}
+	state := decoderState{strict: false, exactness: exact}
+	err := d.typeDecoder(value.Type())(result, value, &state)
+	return state.exactness, err
+}
+
 func (d *decoderBuilder) typeDecoder(t reflect.Type) decoderFunc {
 	entry := decoderEntry{
 		Type:       t,
@@ -124,6 +141,24 @@ func (d *decoderBuilder) typeDecoder(t reflect.Type) decoderFunc {
 	return f
 }
 
+// validatedTypeDecoder wraps the type decoder with a validator. This is helpful
+// for ensuring that enum fields are correct.
+func (d *decoderBuilder) validatedTypeDecoder(t reflect.Type, entry *validationEntry) decoderFunc {
+	dec := d.typeDecoder(t)
+	if entry == nil {
+		return dec
+	}
+
+	// Thread the current validation entry through the decoder,
+	// but clean up in time for the next field.
+	return func(node gjson.Result, v reflect.Value, state *decoderState) error {
+		state.validator = entry
+		err := dec(node, v, state)
+		state.validator = nil
+		return err
+	}
+}
+
 func indirectUnmarshalerDecoder(n gjson.Result, v reflect.Value, state *decoderState) error {
 	return v.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(n.Raw))
 }
@@ -139,6 +174,11 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return d.newTimeTypeDecoder(t)
 	}
+
+	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
+		return d.newOptTypeDecoder(t)
+	}
+
 	if !d.root && t.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
 		return unmarshalerDecoder
 	}
@@ -150,6 +190,9 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	d.root = false
 
 	if _, ok := unionRegistry[t]; ok {
+		if isStructUnion(t) {
+			return d.newStructUnionDecoder(t)
+		}
 		return d.newUnionDecoder(t)
 	}
 
@@ -173,6 +216,9 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 			return nil
 		}
 	case reflect.Struct:
+		if isStructUnion(t) {
+			return d.newStructUnionDecoder(t)
+		}
 		return d.newStructTypeDecoder(t)
 	case reflect.Array:
 		fallthrough
@@ -192,80 +238,6 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 		}
 	default:
 		return d.newPrimitiveTypeDecoder(t)
-	}
-}
-
-// newUnionDecoder returns a decoderFunc that deserializes into a union using an
-// algorithm roughly similar to Pydantic's [smart algorithm].
-//
-// Conceptually this is equivalent to choosing the best schema based on how 'exact'
-// the deserialization is for each of the schemas.
-//
-// If there is a tie in the level of exactness, then the tie is broken
-// left-to-right.
-//
-// [smart algorithm]: https://docs.pydantic.dev/latest/concepts/unions/#smart-mode
-func (d *decoderBuilder) newUnionDecoder(t reflect.Type) decoderFunc {
-	unionEntry, ok := unionRegistry[t]
-	if !ok {
-		panic("apijson: couldn't find union of type " + t.String() + " in union registry")
-	}
-	decoders := []decoderFunc{}
-	for _, variant := range unionEntry.variants {
-		decoder := d.typeDecoder(variant.Type)
-		decoders = append(decoders, decoder)
-	}
-	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
-		// If there is a discriminator match, circumvent the exactness logic entirely
-		for idx, variant := range unionEntry.variants {
-			decoder := decoders[idx]
-			if variant.TypeFilter != n.Type {
-				continue
-			}
-
-			if len(unionEntry.discriminatorKey) != 0 {
-				discriminatorValue := n.Get(unionEntry.discriminatorKey).Value()
-				if discriminatorValue == variant.DiscriminatorValue {
-					inner := reflect.New(variant.Type).Elem()
-					err := decoder(n, inner, state)
-					v.Set(inner)
-					return err
-				}
-			}
-		}
-
-		// Set bestExactness to worse than loose
-		bestExactness := loose - 1
-		for idx, variant := range unionEntry.variants {
-			decoder := decoders[idx]
-			if variant.TypeFilter != n.Type {
-				continue
-			}
-			sub := decoderState{strict: state.strict, exactness: exact}
-			inner := reflect.New(variant.Type).Elem()
-			err := decoder(n, inner, &sub)
-			if err != nil {
-				continue
-			}
-			if sub.exactness == exact {
-				v.Set(inner)
-				return nil
-			}
-			if sub.exactness > bestExactness {
-				v.Set(inner)
-				bestExactness = sub.exactness
-			}
-		}
-
-		if bestExactness < loose {
-			return errors.New("apijson: was not able to coerce type as union")
-		}
-
-		if guardStrict(state, bestExactness != exact) {
-			return errors.New("apijson: was not able to coerce type as union strictly")
-		}
-
-		return nil
 	}
 }
 
@@ -343,7 +315,9 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 	decoderFields := map[string]decoderField{}
 	anonymousDecoders := []decoderField{}
 	extraDecoder := (*decoderField)(nil)
-	inlineDecoder := (*decoderField)(nil)
+	var inlineDecoders []decoderField
+
+	validationEntries := validationRegistry[t]
 
 	for i := 0; i < t.NumField(); i++ {
 		idx := []int{i}
@@ -351,6 +325,15 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 		if !field.IsExported() {
 			continue
 		}
+
+		var validator *validationEntry
+		for _, entry := range validationEntries {
+			if entry.field.Offset == field.Offset {
+				validator = &entry
+				break
+			}
+		}
+
 		// If this is an embedded struct, traverse one level deeper to extract
 		// the fields and get their encoders as well.
 		if field.Anonymous {
@@ -373,7 +356,8 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			continue
 		}
 		if ptag.inline {
-			inlineDecoder = &decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
+			df := decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
+			inlineDecoders = append(inlineDecoders, df)
 			continue
 		}
 		if ptag.metadata {
@@ -390,7 +374,13 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 				d.dateFormat = "2006-01-02"
 			}
 		}
-		decoderFields[ptag.name] = decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
+
+		decoderFields[ptag.name] = decoderField{
+			ptag,
+			d.validatedTypeDecoder(field.Type, validator),
+			idx, field.Name,
+		}
+
 		d.dateFormat = oldFormat
 	}
 
@@ -406,12 +396,13 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			decoder.fn(node, value.FieldByIndex(decoder.idx), state)
 		}
 
-		if inlineDecoder != nil {
+		for _, inlineDecoder := range inlineDecoders {
 			var meta Field
 			dest := value.FieldByIndex(inlineDecoder.idx)
 			isValid := false
 			if dest.IsValid() && node.Type != gjson.Null {
-				err = inlineDecoder.fn(node, dest, state)
+				inlineState := decoderState{exactness: state.exactness, strict: true}
+				err = inlineDecoder.fn(node, dest, &inlineState)
 				if err == nil {
 					isValid = true
 				}
@@ -423,20 +414,18 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 					status: null,
 				}
 			} else if !isValid {
-				meta = Field{
-					raw:    node.Raw,
-					status: invalid,
+				// If an inline decoder fails, unset the field and move on.
+				if dest.IsValid() {
+					dest.SetZero()
 				}
+				continue
 			} else if isValid {
 				meta = Field{
 					raw:    node.Raw,
 					status: valid,
 				}
 			}
-			if metadata := getSubField(value, inlineDecoder.idx, inlineDecoder.goname); metadata.IsValid() {
-				metadata.Set(reflect.ValueOf(meta))
-			}
-			return err
+			setMetadataSubField(value, inlineDecoder.idx, inlineDecoder.goname, meta)
 		}
 
 		typedExtraType := reflect.Type(nil)
@@ -471,6 +460,12 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 				}
 			}
 
+			// Handle null [param.Opt]
+			if itemNode.Type == gjson.Null && dest.IsValid() && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
+				dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
+				continue
+			}
+
 			if itemNode.Type == gjson.Null {
 				meta = Field{
 					raw:    itemNode.Raw,
@@ -489,9 +484,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			}
 
 			if explicit {
-				if metadata := getSubField(value, df.idx, df.goname); metadata.IsValid() {
-					metadata.Set(reflect.ValueOf(meta))
-				}
+				setMetadataSubField(value, df.idx, df.goname, meta)
 			}
 			if !explicit {
 				untypedExtraFields[fieldName] = meta
@@ -510,8 +503,8 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			state.exactness = extras
 		}
 
-		if metadata := getSubField(value, []int{-1}, "ExtraFields"); metadata.IsValid() && len(untypedExtraFields) > 0 {
-			metadata.Set(reflect.ValueOf(untypedExtraFields))
+		if len(untypedExtraFields) > 0 {
+			setMetadataExtraFields(value, []int{-1}, "ExtraFields", untypedExtraFields)
 		}
 		return nil
 	}
@@ -529,6 +522,9 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 			if n.Type == gjson.JSON {
 				return fmt.Errorf("apijson: failed to parse string")
 			}
+
+			state.validateString(v)
+
 			if guardUnknown(state, v) {
 				return fmt.Errorf("apijson: failed string enum validation")
 			}
@@ -545,6 +541,9 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 			if n.Type == gjson.String && (n.Raw != "true" && n.Raw != "false") || n.Type == gjson.JSON {
 				return fmt.Errorf("apijson: failed to parse bool")
 			}
+
+			state.validateBool(v)
+
 			if guardUnknown(state, v) {
 				return fmt.Errorf("apijson: failed bool enum validation")
 			}
@@ -561,6 +560,9 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 			if n.Type == gjson.JSON || (n.Type == gjson.String && !canParseAsNumber(n.Str)) {
 				return fmt.Errorf("apijson: failed to parse int")
 			}
+
+			state.validateInt(v)
+
 			if guardUnknown(state, v) {
 				return fmt.Errorf("apijson: failed int enum validation")
 			}
@@ -605,6 +607,17 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 	}
 }
 
+func (d *decoderBuilder) newOptTypeDecoder(t reflect.Type) decoderFunc {
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	valueField, _ := t.FieldByName("Value")
+	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
+		state.validateOptKind(n, valueField.Type)
+		return v.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(n.Raw))
+	}
+}
+
 func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 	format := d.dateFormat
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
@@ -640,7 +653,7 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 	}
 }
 
-func setUnexportedField(field reflect.Value, value interface{}) {
+func setUnexportedField(field reflect.Value, value any) {
 	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(reflect.ValueOf(value))
 }
 
@@ -662,8 +675,16 @@ func canParseAsNumber(str string) bool {
 	return err == nil
 }
 
+var stringType = reflect.TypeOf(string(""))
+
 func guardUnknown(state *decoderState, v reflect.Value) bool {
 	if have, ok := v.Interface().(interface{ IsKnown() bool }); guardStrict(state, ok && !have.IsKnown()) {
+		return true
+	}
+
+	constantString, ok := v.Interface().(interface{ Default() string })
+	named := v.Type() != stringType
+	if guardStrict(state, ok && named && v.Equal(reflect.ValueOf(constantString.Default()))) {
 		return true
 	}
 	return false

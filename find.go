@@ -4,14 +4,16 @@ package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 
-	"github.com/sst/opencode-sdk-go/internal/apijson"
-	"github.com/sst/opencode-sdk-go/internal/apiquery"
-	"github.com/sst/opencode-sdk-go/internal/param"
-	"github.com/sst/opencode-sdk-go/internal/requestconfig"
-	"github.com/sst/opencode-sdk-go/option"
+	"github.com/stainless-sdks/opencode-go/internal/apijson"
+	"github.com/stainless-sdks/opencode-go/internal/apiquery"
+	"github.com/stainless-sdks/opencode-go/internal/requestconfig"
+	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/stainless-sdks/opencode-go/packages/param"
+	"github.com/stainless-sdks/opencode-go/packages/respjson"
 )
 
 // FindService contains methods and other services that help with interacting with
@@ -27,14 +29,22 @@ type FindService struct {
 // NewFindService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewFindService(opts ...option.RequestOption) (r *FindService) {
-	r = &FindService{}
+func NewFindService(opts ...option.RequestOption) (r FindService) {
+	r = FindService{}
 	r.Options = opts
 	return
 }
 
+// Find text in files
+func (r *FindService) Get(ctx context.Context, query FindGetParams, opts ...option.RequestOption) (res *[]FindGetResponse, err error) {
+	opts = append(r.Options[:], opts...)
+	path := "find"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return
+}
+
 // Find files
-func (r *FindService) Files(ctx context.Context, query FindFilesParams, opts ...option.RequestOption) (res *[]string, err error) {
+func (r *FindService) GetFile(ctx context.Context, query FindGetFileParams, opts ...option.RequestOption) (res *[]string, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "find/file"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
@@ -42,283 +52,284 @@ func (r *FindService) Files(ctx context.Context, query FindFilesParams, opts ...
 }
 
 // Find workspace symbols
-func (r *FindService) Symbols(ctx context.Context, query FindSymbolsParams, opts ...option.RequestOption) (res *[]Symbol, err error) {
+func (r *FindService) GetSymbol(ctx context.Context, query FindGetSymbolParams, opts ...option.RequestOption) (res *[]FindGetSymbolResponse, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "find/symbol"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
-// Find text in files
-func (r *FindService) Text(ctx context.Context, query FindTextParams, opts ...option.RequestOption) (res *[]FindTextResponse, err error) {
-	opts = append(r.Options[:], opts...)
-	path := "find"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+type Range struct {
+	End   RangeEnd   `json:"end,required"`
+	Start RangeStart `json:"start,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		End         respjson.Field
+		Start       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type Symbol struct {
-	Kind     float64        `json:"kind,required"`
-	Location SymbolLocation `json:"location,required"`
-	Name     string         `json:"name,required"`
-	JSON     symbolJSON     `json:"-"`
-}
-
-// symbolJSON contains the JSON metadata for the struct [Symbol]
-type symbolJSON struct {
-	Kind        apijson.Field
-	Location    apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Symbol) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Range) RawJSON() string { return r.JSON.raw }
+func (r *Range) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this Range to a RangeParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RangeParam.Overrides()
+func (r Range) ToParam() RangeParam {
+	return param.Override[RangeParam](json.RawMessage(r.RawJSON()))
 }
 
-type SymbolLocation struct {
-	Range SymbolLocationRange `json:"range,required"`
-	Uri   string              `json:"uri,required"`
-	JSON  symbolLocationJSON  `json:"-"`
+type RangeEnd struct {
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Character   respjson.Field
+		Line        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// symbolLocationJSON contains the JSON metadata for the struct [SymbolLocation]
-type symbolLocationJSON struct {
-	Range       apijson.Field
-	Uri         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolLocation) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r RangeEnd) RawJSON() string { return r.JSON.raw }
+func (r *RangeEnd) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationJSON) RawJSON() string {
-	return r.raw
+type RangeStart struct {
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Character   respjson.Field
+		Line        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type SymbolLocationRange struct {
-	End   SymbolLocationRangeEnd   `json:"end,required"`
-	Start SymbolLocationRangeStart `json:"start,required"`
-	JSON  symbolLocationRangeJSON  `json:"-"`
-}
-
-// symbolLocationRangeJSON contains the JSON metadata for the struct
-// [SymbolLocationRange]
-type symbolLocationRangeJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolLocationRange) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r RangeStart) RawJSON() string { return r.JSON.raw }
+func (r *RangeStart) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationRangeJSON) RawJSON() string {
-	return r.raw
+// The properties End, Start are required.
+type RangeParam struct {
+	End   RangeEndParam   `json:"end,omitzero,required"`
+	Start RangeStartParam `json:"start,omitzero,required"`
+	paramObj
 }
 
-type SymbolLocationRangeEnd struct {
-	Character float64                    `json:"character,required"`
-	Line      float64                    `json:"line,required"`
-	JSON      symbolLocationRangeEndJSON `json:"-"`
+func (r RangeParam) MarshalJSON() (data []byte, err error) {
+	type shadow RangeParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-// symbolLocationRangeEndJSON contains the JSON metadata for the struct
-// [SymbolLocationRangeEnd]
-type symbolLocationRangeEndJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolLocationRangeEnd) UnmarshalJSON(data []byte) (err error) {
+func (r *RangeParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationRangeEndJSON) RawJSON() string {
-	return r.raw
+// The properties Character, Line are required.
+type RangeEndParam struct {
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
+	paramObj
 }
 
-type SymbolLocationRangeStart struct {
-	Character float64                      `json:"character,required"`
-	Line      float64                      `json:"line,required"`
-	JSON      symbolLocationRangeStartJSON `json:"-"`
+func (r RangeEndParam) MarshalJSON() (data []byte, err error) {
+	type shadow RangeEndParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-// symbolLocationRangeStartJSON contains the JSON metadata for the struct
-// [SymbolLocationRangeStart]
-type symbolLocationRangeStartJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolLocationRangeStart) UnmarshalJSON(data []byte) (err error) {
+func (r *RangeEndParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationRangeStartJSON) RawJSON() string {
-	return r.raw
+// The properties Character, Line are required.
+type RangeStartParam struct {
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
+	paramObj
 }
 
-type FindTextResponse struct {
-	AbsoluteOffset float64                    `json:"absolute_offset,required"`
-	LineNumber     float64                    `json:"line_number,required"`
-	Lines          FindTextResponseLines      `json:"lines,required"`
-	Path           FindTextResponsePath       `json:"path,required"`
-	Submatches     []FindTextResponseSubmatch `json:"submatches,required"`
-	JSON           findTextResponseJSON       `json:"-"`
+func (r RangeStartParam) MarshalJSON() (data []byte, err error) {
+	type shadow RangeStartParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-// findTextResponseJSON contains the JSON metadata for the struct
-// [FindTextResponse]
-type findTextResponseJSON struct {
-	AbsoluteOffset apijson.Field
-	LineNumber     apijson.Field
-	Lines          apijson.Field
-	Path           apijson.Field
-	Submatches     apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *FindTextResponse) UnmarshalJSON(data []byte) (err error) {
+func (r *RangeStartParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseJSON) RawJSON() string {
-	return r.raw
+type FindGetResponse struct {
+	AbsoluteOffset float64                   `json:"absolute_offset,required"`
+	LineNumber     float64                   `json:"line_number,required"`
+	Lines          FindGetResponseLines      `json:"lines,required"`
+	Path           FindGetResponsePath       `json:"path,required"`
+	Submatches     []FindGetResponseSubmatch `json:"submatches,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AbsoluteOffset respjson.Field
+		LineNumber     respjson.Field
+		Lines          respjson.Field
+		Path           respjson.Field
+		Submatches     respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-type FindTextResponseLines struct {
-	Text string                    `json:"text,required"`
-	JSON findTextResponseLinesJSON `json:"-"`
-}
-
-// findTextResponseLinesJSON contains the JSON metadata for the struct
-// [FindTextResponseLines]
-type findTextResponseLinesJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FindTextResponseLines) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FindGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *FindGetResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseLinesJSON) RawJSON() string {
-	return r.raw
+type FindGetResponseLines struct {
+	Text string `json:"text,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type FindTextResponsePath struct {
-	Text string                   `json:"text,required"`
-	JSON findTextResponsePathJSON `json:"-"`
-}
-
-// findTextResponsePathJSON contains the JSON metadata for the struct
-// [FindTextResponsePath]
-type findTextResponsePathJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FindTextResponsePath) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FindGetResponseLines) RawJSON() string { return r.JSON.raw }
+func (r *FindGetResponseLines) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponsePathJSON) RawJSON() string {
-	return r.raw
+type FindGetResponsePath struct {
+	Text string `json:"text,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type FindTextResponseSubmatch struct {
-	End   float64                         `json:"end,required"`
-	Match FindTextResponseSubmatchesMatch `json:"match,required"`
-	Start float64                         `json:"start,required"`
-	JSON  findTextResponseSubmatchJSON    `json:"-"`
-}
-
-// findTextResponseSubmatchJSON contains the JSON metadata for the struct
-// [FindTextResponseSubmatch]
-type findTextResponseSubmatchJSON struct {
-	End         apijson.Field
-	Match       apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FindTextResponseSubmatch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FindGetResponsePath) RawJSON() string { return r.JSON.raw }
+func (r *FindGetResponsePath) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseSubmatchJSON) RawJSON() string {
-	return r.raw
+type FindGetResponseSubmatch struct {
+	End   float64                      `json:"end,required"`
+	Match FindGetResponseSubmatchMatch `json:"match,required"`
+	Start float64                      `json:"start,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		End         respjson.Field
+		Match       respjson.Field
+		Start       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type FindTextResponseSubmatchesMatch struct {
-	Text string                              `json:"text,required"`
-	JSON findTextResponseSubmatchesMatchJSON `json:"-"`
-}
-
-// findTextResponseSubmatchesMatchJSON contains the JSON metadata for the struct
-// [FindTextResponseSubmatchesMatch]
-type findTextResponseSubmatchesMatchJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FindTextResponseSubmatchesMatch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FindGetResponseSubmatch) RawJSON() string { return r.JSON.raw }
+func (r *FindGetResponseSubmatch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseSubmatchesMatchJSON) RawJSON() string {
-	return r.raw
+type FindGetResponseSubmatchMatch struct {
+	Text string `json:"text,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type FindFilesParams struct {
-	Query param.Field[string] `query:"query,required"`
+// Returns the unmodified JSON received from the API
+func (r FindGetResponseSubmatchMatch) RawJSON() string { return r.JSON.raw }
+func (r *FindGetResponseSubmatchMatch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-// URLQuery serializes [FindFilesParams]'s query parameters as `url.Values`.
-func (r FindFilesParams) URLQuery() (v url.Values) {
+type FindGetSymbolResponse struct {
+	Kind     float64                       `json:"kind,required"`
+	Location FindGetSymbolResponseLocation `json:"location,required"`
+	Name     string                        `json:"name,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Kind        respjson.Field
+		Location    respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FindGetSymbolResponse) RawJSON() string { return r.JSON.raw }
+func (r *FindGetSymbolResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type FindGetSymbolResponseLocation struct {
+	Range Range  `json:"range,required"`
+	Uri   string `json:"uri,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Range       respjson.Field
+		Uri         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FindGetSymbolResponseLocation) RawJSON() string { return r.JSON.raw }
+func (r *FindGetSymbolResponseLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type FindGetParams struct {
+	Pattern string `query:"pattern,required" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [FindGetParams]'s query parameters as `url.Values`.
+func (r FindGetParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
 
-type FindSymbolsParams struct {
-	Query param.Field[string] `query:"query,required"`
+type FindGetFileParams struct {
+	Query string `query:"query,required" json:"-"`
+	paramObj
 }
 
-// URLQuery serializes [FindSymbolsParams]'s query parameters as `url.Values`.
-func (r FindSymbolsParams) URLQuery() (v url.Values) {
+// URLQuery serializes [FindGetFileParams]'s query parameters as `url.Values`.
+func (r FindGetFileParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
 
-type FindTextParams struct {
-	Pattern param.Field[string] `query:"pattern,required"`
+type FindGetSymbolParams struct {
+	Query string `query:"query,required" json:"-"`
+	paramObj
 }
 
-// URLQuery serializes [FindTextParams]'s query parameters as `url.Values`.
-func (r FindTextParams) URLQuery() (v url.Values) {
+// URLQuery serializes [FindGetSymbolParams]'s query parameters as `url.Values`.
+func (r FindGetSymbolParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
