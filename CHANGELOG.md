@@ -1,278 +1,66 @@
 # Changelog
 
-## 0.1.0-alpha.29 (2025-08-29)
+## 0.1.0 (2025-08-31)
 
-Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
-
-### Features
-
-* **client:** support optional json html escaping ([a3256ce](https://github.com/sst/opencode-sdk-go/commit/a3256ce99b627d82c212ad8985bac8665254a0f4))
-
-
-### Bug Fixes
-
-* close body before retrying ([3fd6ee2](https://github.com/sst/opencode-sdk-go/commit/3fd6ee2bd1813242b7c133f0d4a996aae9ccd9cc))
-
-
-### Chores
-
-* **internal:** codegen related update ([53a0edb](https://github.com/sst/opencode-sdk-go/commit/53a0edb963a26e32bd3e073bb68605ca34f2133c))
-* **internal:** update comment in script ([1514f3c](https://github.com/sst/opencode-sdk-go/commit/1514f3c60cb787b7aa013a1f06b46f289e3abf83))
-* update @stainless-api/prism-cli to v5.15.0 ([8e03de2](https://github.com/sst/opencode-sdk-go/commit/8e03de2b7d492d80a06cd0f798e79598c9bcef1d))
-
-## 0.1.0-alpha.28 (2025-07-29)
-
-Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
+Full Changelog: [v0.0.1...v0.1.0](https://github.com/sst/opencode-sdk-go/compare/v0.0.1...v0.1.0)
 
 ### Features
 
-* **api:** api update ([334d8dd](https://github.com/sst/opencode-sdk-go/commit/334d8dd6f92fa91ef9e16f4eb54662d3d5dbcbad))
-
-## 0.1.0-alpha.27 (2025-07-28)
-
-Full Changelog: [v0.1.0-alpha.26...v0.1.0-alpha.27](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.26...v0.1.0-alpha.27)
-
-### Features
-
-* **api:** api update ([ed90e7f](https://github.com/sst/opencode-sdk-go/commit/ed90e7f82e4323c6607c9a18743e88b153dfb7dd))
-
-## 0.1.0-alpha.26 (2025-07-28)
-
-Full Changelog: [v0.1.0-alpha.25...v0.1.0-alpha.26](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.25...v0.1.0-alpha.26)
-
-### Features
-
-* **api:** api update ([1d83774](https://github.com/sst/opencode-sdk-go/commit/1d8377459ba780a0a627171af68c1e904c138b8a))
-
-## 0.1.0-alpha.25 (2025-07-24)
-
-Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)
-
-### Features
-
-* **api:** api update ([aa25120](https://github.com/sst/opencode-sdk-go/commit/aa25120f3e4fce27a982e697dcee959f8c7dea6e))
-
-## 0.1.0-alpha.24 (2025-07-24)
-
-Full Changelog: [v0.1.0-alpha.23...v0.1.0-alpha.24](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.23...v0.1.0-alpha.24)
-
-### Features
-
-* **api:** api update ([99e3d38](https://github.com/sst/opencode-sdk-go/commit/99e3d3861047d7e7ca9bff3813aa3ab79d49f2bc))
-
-## 0.1.0-alpha.23 (2025-07-24)
-
-Full Changelog: [v0.1.0-alpha.22...v0.1.0-alpha.23](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.22...v0.1.0-alpha.23)
-
-### Features
-
-* **api:** api update ([e11f122](https://github.com/sst/opencode-sdk-go/commit/e11f122e73a71d931738b9fbee0c0d2daf85119f))
-
-## 0.1.0-alpha.22 (2025-07-22)
-
-Full Changelog: [v0.1.0-alpha.21...v0.1.0-alpha.22](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.21...v0.1.0-alpha.22)
-
-### Features
-
-* **api:** api update ([3c56d29](https://github.com/sst/opencode-sdk-go/commit/3c56d294880188f6276c1460ee2e6dbd1229096c))
-
-## 0.1.0-alpha.21 (2025-07-22)
-
-Full Changelog: [v0.1.0-alpha.20...v0.1.0-alpha.21](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.20...v0.1.0-alpha.21)
-
-### Features
-
-* **api:** api update ([926220d](https://github.com/sst/opencode-sdk-go/commit/926220d44dd9886b41ea278ddec4e708c49f6559))
+* **api:** api update ([3f03ddd](https://github.com/sst/opencode-sdk-go/commit/3f03dddd5ec0de98f99ce48679077dcae9ceffd6))
+* **api:** api update ([e9f79c4](https://github.com/sst/opencode-sdk-go/commit/e9f79c4792b21ef64ab0431ffd76f5a71e04d182))
+* **api:** api update ([139a686](https://github.com/sst/opencode-sdk-go/commit/139a6862d2f0ab0c8ea791663d736868be3e96e6))
+* **api:** api update ([2ed0800](https://github.com/sst/opencode-sdk-go/commit/2ed0800b2c5b99877e9f7fde669a6c005fad6b77))
+* **api:** api update ([88a87a4](https://github.com/sst/opencode-sdk-go/commit/88a87a458f56ce0c18b502c73da933f614f56e8b))
+* **api:** api update ([0e5d65b](https://github.com/sst/opencode-sdk-go/commit/0e5d65b571e7b30dc6347e6730098878ebba3a42))
+* **api:** api update ([ba381f1](https://github.com/sst/opencode-sdk-go/commit/ba381f1e07aad24e9824df7d53befae2a644f69f))
+* **api:** api update ([3f429f5](https://github.com/sst/opencode-sdk-go/commit/3f429f5b4be5607433ef5fdc0d5bf67fe590d039))
 * **api:** api update ([9f34787](https://github.com/sst/opencode-sdk-go/commit/9f347876b35b7f898060c1a5f71c322e95978e3e))
 * **api:** api update ([379c8e0](https://github.com/sst/opencode-sdk-go/commit/379c8e00197e13aebaf2f2d61277b125f1f90011))
-
-
-### Bug Fixes
-
-* **client:** process custom base url ahead of time ([8a99302](https://github.com/sst/opencode-sdk-go/commit/8a99302cafd4fbb587e087ce5e24a94abd791017))
-
-## 0.1.0-alpha.20 (2025-07-21)
-
-Full Changelog: [v0.1.0-alpha.19...v0.1.0-alpha.20](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.19...v0.1.0-alpha.20)
-
-### Features
-
-* **api:** api update ([7a37503](https://github.com/sst/opencode-sdk-go/commit/7a3750339a919c950567fcfd06e16c0bd8a69462))
-* **api:** api update ([b28a288](https://github.com/sst/opencode-sdk-go/commit/b28a288922cae5d3db970dbcf035a7c06f0de9b5))
-
-## 0.1.0-alpha.19 (2025-07-21)
-
-Full Changelog: [v0.1.0-alpha.18...v0.1.0-alpha.19](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.18...v0.1.0-alpha.19)
-
-### Features
-
-* **api:** api update ([bf8f722](https://github.com/sst/opencode-sdk-go/commit/bf8f72275d66325a1ac03b83fec3372ed7565cce))
-* **api:** api update ([0daa0f6](https://github.com/sst/opencode-sdk-go/commit/0daa0f6c93877493b4f067e3629057b01f6907fc))
-
-## 0.1.0-alpha.18 (2025-07-21)
-
-Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
-
-### Features
-
-* **api:** api update ([8d3518b](https://github.com/sst/opencode-sdk-go/commit/8d3518b282310d878685054520717352711a345e))
-
-## 0.1.0-alpha.17 (2025-07-18)
-
-Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
-
-### Features
-
-* **api:** api update ([e8586c2](https://github.com/sst/opencode-sdk-go/commit/e8586c2d388e9d9f5b06a151e599e3166fc7a3d3))
-
-## 0.1.0-alpha.16 (2025-07-17)
-
-Full Changelog: [v0.1.0-alpha.15...v0.1.0-alpha.16](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.15...v0.1.0-alpha.16)
-
-### Features
-
-* **api:** api update ([0eb5f25](https://github.com/sst/opencode-sdk-go/commit/0eb5f2598cf2e728b263afda673c036bdb1a2651))
-* **api:** api update ([d1eb243](https://github.com/sst/opencode-sdk-go/commit/d1eb24377376238012ce867cc2ec15f6b573d757))
-* **api:** api update ([97dd29a](https://github.com/sst/opencode-sdk-go/commit/97dd29abf63ddbeb6149bcc489a0123a5d0dd478))
-* **api:** api update ([185aa7f](https://github.com/sst/opencode-sdk-go/commit/185aa7f37cd4ef2bac17ef8a66c7bed5bd8af64a))
-
-## 0.1.0-alpha.15 (2025-07-16)
-
-Full Changelog: [v0.1.0-alpha.14...v0.1.0-alpha.15](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.14...v0.1.0-alpha.15)
-
-### Features
-
-* **api:** api update ([f292ad2](https://github.com/sst/opencode-sdk-go/commit/f292ad2d7520325b518f14b70f89127a5f581eb8))
-
-## 0.1.0-alpha.14 (2025-07-16)
-
-Full Changelog: [v0.1.0-alpha.13...v0.1.0-alpha.14](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.13...v0.1.0-alpha.14)
-
-### Features
-
-* **api:** api update ([5d235c4](https://github.com/sst/opencode-sdk-go/commit/5d235c48e3ce465276abba36fbe785b06d149369))
-
-## 0.1.0-alpha.13 (2025-07-15)
-
-Full Changelog: [v0.1.0-alpha.12...v0.1.0-alpha.13](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.12...v0.1.0-alpha.13)
-
-### Features
-
-* **api:** api update ([e92c67c](https://github.com/sst/opencode-sdk-go/commit/e92c67c33184ca6d91964447b46e08dbe45f4683))
-
-## 0.1.0-alpha.12 (2025-07-15)
-
-Full Changelog: [v0.1.0-alpha.11...v0.1.0-alpha.12](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.11...v0.1.0-alpha.12)
-
-### Features
-
-* **api:** api update ([3c5aec2](https://github.com/sst/opencode-sdk-go/commit/3c5aec235c6e86c3e7e5698013be5e3052de1f01))
-
-## 0.1.0-alpha.11 (2025-07-15)
-
-Full Changelog: [v0.1.0-alpha.10...v0.1.0-alpha.11](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.10...v0.1.0-alpha.11)
-
-### Features
-
-* **api:** api update ([5154007](https://github.com/sst/opencode-sdk-go/commit/51540070d00fdfc6744ff40d7ce5d92fc7985bae))
-
-## 0.1.0-alpha.10 (2025-07-11)
-
-Full Changelog: [v0.1.0-alpha.9...v0.1.0-alpha.10](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.9...v0.1.0-alpha.10)
-
-### Bug Fixes
-
-* **client:** resolve lint errors in streaming tests ([c0d6eeb](https://github.com/sst/opencode-sdk-go/commit/c0d6eeb1fb32955949dfaaa653de9fddc5e85576))
-
-
-### Chores
-
-* lint tests in subpackages ([39c3a36](https://github.com/sst/opencode-sdk-go/commit/39c3a360302a9a0f992a68655e3a328528f3407b))
-
-## 0.1.0-alpha.9 (2025-07-09)
-
-Full Changelog: [v0.1.0-alpha.8...v0.1.0-alpha.9](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.8...v0.1.0-alpha.9)
-
-### Features
-
-* **api:** api update ([3b05d23](https://github.com/sst/opencode-sdk-go/commit/3b05d2399d49bf30c546cea4a501cbaf6af04e31))
-* **api:** manual updates ([dc1723e](https://github.com/sst/opencode-sdk-go/commit/dc1723eb38ae62692872d055b7c4b790a9efc198))
-* **client:** expand max streaming buffer size ([43ce15f](https://github.com/sst/opencode-sdk-go/commit/43ce15ff6517917359b18e0057210413cd29b919))
-
-
-### Chores
-
-* **internal:** fix lint script for tests ([b76aa94](https://github.com/sst/opencode-sdk-go/commit/b76aa94f975056a5ab72937e61ebb40f80632d1a))
-* lint tests ([61cff76](https://github.com/sst/opencode-sdk-go/commit/61cff76ae37742f296d79eb898f55a03efcf8bb4))
-
-## 0.1.0-alpha.8 (2025-07-02)
-
-Full Changelog: [v0.1.0-alpha.7...v0.1.0-alpha.8](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.7...v0.1.0-alpha.8)
-
-### Features
-
-* **api:** update via SDK Studio ([651e937](https://github.com/sst/opencode-sdk-go/commit/651e937c334e1caba3b968e6cac865c219879519))
-
-## 0.1.0-alpha.7 (2025-06-30)
-
-Full Changelog: [v0.1.0-alpha.6...v0.1.0-alpha.7](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.6...v0.1.0-alpha.7)
-
-### Features
-
+* **api:** api update ([550511c](https://github.com/sst/opencode-sdk-go/commit/550511c4c5b5055ac8ff22b7b11731331bd9d088))
+* **api:** api update ([547f0c2](https://github.com/sst/opencode-sdk-go/commit/547f0c262f2df1ce83eaa7267d68be64bb29b841))
+* **api:** api update ([b7b0720](https://github.com/sst/opencode-sdk-go/commit/b7b07204bff314da24b1819c128835a43ef64065))
+* **api:** api update ([7250ffc](https://github.com/sst/opencode-sdk-go/commit/7250ffcba262b916c958ddecc2a42927982db39f))
+* **api:** api update ([17fbab7](https://github.com/sst/opencode-sdk-go/commit/17fbab73111a3eae488737c69b12370bc69c65f7))
+* **api:** api update ([1270b5c](https://github.com/sst/opencode-sdk-go/commit/1270b5cd81e6ac769dcd92ade6d877891bf51bd5))
+* **api:** api update ([a238d4a](https://github.com/sst/opencode-sdk-go/commit/a238d4abd6ed7d15f3547d27a4b6ecf4aec8431e))
+* **api:** api update ([7475655](https://github.com/sst/opencode-sdk-go/commit/7475655aca577fe4f807c2f02f92171f6a358e9c))
+* **api:** api update ([429d258](https://github.com/sst/opencode-sdk-go/commit/429d258bb56e9cdeb1528be3944bf5537ac26a96))
+* **api:** api update ([f250915](https://github.com/sst/opencode-sdk-go/commit/f2509157eaf1b453e741ee9482127cad2e3ace25))
+* **api:** api update ([5efc987](https://github.com/sst/opencode-sdk-go/commit/5efc987353801d1e772c20edf162b1c75da32743))
+* **api:** api update ([98a8350](https://github.com/sst/opencode-sdk-go/commit/98a83504f7cfc361e83314c3e79a4e9ff53f0560))
+* **api:** api update ([6da8bf8](https://github.com/sst/opencode-sdk-go/commit/6da8bf8bfe91d45991fb580753d77c5534fc0b1b))
+* **api:** api update ([f8c7148](https://github.com/sst/opencode-sdk-go/commit/f8c7148ae56143823186e2675a78e82676154956))
+* **api:** manual updates ([7cf038f](https://github.com/sst/opencode-sdk-go/commit/7cf038ffae5da1b77e1cef11b5fa166a53b467f2))
+* **api:** update via SDK Studio ([068a0eb](https://github.com/sst/opencode-sdk-go/commit/068a0eb025010da0c8d86fa1bb496a39dbedcef9))
+* **api:** update via SDK Studio ([ca651ed](https://github.com/sst/opencode-sdk-go/commit/ca651edaf71d1f3678f929287474f5bc4f1aad10))
 * **api:** update via SDK Studio ([13550a5](https://github.com/sst/opencode-sdk-go/commit/13550a5c65d77325e945ed99fe0799cd1107b775))
 * **api:** update via SDK Studio ([7b73730](https://github.com/sst/opencode-sdk-go/commit/7b73730c7fa62ba966dda3541c3e97b49be8d2bf))
+* **api:** update via SDK Studio ([9e39a59](https://github.com/sst/opencode-sdk-go/commit/9e39a59b3d5d1bd5e64633732521fb28362cc70e))
+* **api:** update via SDK Studio ([9609d1b](https://github.com/sst/opencode-sdk-go/commit/9609d1b1db7806d00cb846c9914cb4935cdedf52))
+* **api:** update via SDK Studio ([51315fa](https://github.com/sst/opencode-sdk-go/commit/51315fa2eae424743ea79701e67d44447c44144d))
+* **api:** update via SDK Studio ([af07955](https://github.com/sst/opencode-sdk-go/commit/af0795543240aefaf04fc7663a348825541c79ed))
+* **api:** update via SDK Studio ([5e3468a](https://github.com/sst/opencode-sdk-go/commit/5e3468a0aaa5ed3b13e019c3a24e0ba9147d1675))
+* **api:** update via SDK Studio ([0a73e04](https://github.com/sst/opencode-sdk-go/commit/0a73e04c23c90b2061611edaa8fd6282dc0ce397))
+* **api:** update via SDK Studio ([9b7883a](https://github.com/sst/opencode-sdk-go/commit/9b7883a144eeac526d9d04538e0876a9d18bb844))
+* **client:** expand max streaming buffer size ([76303e5](https://github.com/sst/opencode-sdk-go/commit/76303e51067e78e732af26ced9d83b8bad7655c3))
+* **client:** support optional json html escaping ([449748f](https://github.com/sst/opencode-sdk-go/commit/449748f35a1d8cb6f91dc36d25bf9489f4f371bd))
+
+
+### Bug Fixes
+
+* **client:** process custom base url ahead of time ([9b360d6](https://github.com/sst/opencode-sdk-go/commit/9b360d642cf6f302104308af5622e17099899e5f))
+* **client:** resolve lint errors in streaming tests ([4d36cb0](https://github.com/sst/opencode-sdk-go/commit/4d36cb09fc9d436734d5dab1c499acaa88568ff7))
+* close body before retrying ([4da3f7f](https://github.com/sst/opencode-sdk-go/commit/4da3f7f372bad222a189ba3eabcfde3373166ae5))
+* don't try to deserialize as json when ResponseBodyInto is []byte ([595291f](https://github.com/sst/opencode-sdk-go/commit/595291f6dba6af472f160b9f8e3d145002f43a4a))
 
 
 ### Chores
 
 * **ci:** only run for pushes and fork pull requests ([bea59b8](https://github.com/sst/opencode-sdk-go/commit/bea59b886800ef555f89c47a9256d6392ed2e53d))
-
-## 0.1.0-alpha.6 (2025-06-28)
-
-Full Changelog: [v0.1.0-alpha.5...v0.1.0-alpha.6](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
-
-### Bug Fixes
-
-* don't try to deserialize as json when ResponseBodyInto is []byte ([5988d04](https://github.com/sst/opencode-sdk-go/commit/5988d04839cb78b6613057280b91b72a60fef33d))
-
-## 0.1.0-alpha.5 (2025-06-27)
-
-Full Changelog: [v0.1.0-alpha.4...v0.1.0-alpha.5](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
-
-### Features
-
-* **api:** update via SDK Studio ([9e39a59](https://github.com/sst/opencode-sdk-go/commit/9e39a59b3d5d1bd5e64633732521fb28362cc70e))
-
-## 0.1.0-alpha.4 (2025-06-27)
-
-Full Changelog: [v0.1.0-alpha.3...v0.1.0-alpha.4](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
-
-### Features
-
-* **api:** update via SDK Studio ([9609d1b](https://github.com/sst/opencode-sdk-go/commit/9609d1b1db7806d00cb846c9914cb4935cdedf52))
-
-## 0.1.0-alpha.3 (2025-06-27)
-
-Full Changelog: [v0.1.0-alpha.2...v0.1.0-alpha.3](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
-
-### Features
-
-* **api:** update via SDK Studio ([57f3230](https://github.com/sst/opencode-sdk-go/commit/57f32309023cc1f0f20c20d02a3907e390a71f61))
-
-## 0.1.0-alpha.2 (2025-06-27)
-
-Full Changelog: [v0.1.0-alpha.1...v0.1.0-alpha.2](https://github.com/sst/opencode-sdk-go/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
-
-### Features
-
-* **api:** update via SDK Studio ([a766f1c](https://github.com/sst/opencode-sdk-go/commit/a766f1c54f02bbc1380151b0e22d97cc2c5892e6))
-
-## 0.1.0-alpha.1 (2025-06-27)
-
-Full Changelog: [v0.0.1-alpha.0...v0.1.0-alpha.1](https://github.com/sst/opencode-sdk-go/compare/v0.0.1-alpha.0...v0.1.0-alpha.1)
-
-### Features
-
-* **api:** update via SDK Studio ([27b7376](https://github.com/sst/opencode-sdk-go/commit/27b7376310466ee17a63f2104f546b53a2b8361a))
-* **api:** update via SDK Studio ([0a73e04](https://github.com/sst/opencode-sdk-go/commit/0a73e04c23c90b2061611edaa8fd6282dc0ce397))
-* **api:** update via SDK Studio ([9b7883a](https://github.com/sst/opencode-sdk-go/commit/9b7883a144eeac526d9d04538e0876a9d18bb844))
+* **internal:** codegen related update ([6a22ce6](https://github.com/sst/opencode-sdk-go/commit/6a22ce6df155f5003e80b8a75686a9e513a5568a))
+* **internal:** fix lint script for tests ([391c482](https://github.com/sst/opencode-sdk-go/commit/391c482148ed0a77c4ad52807abeb2d540b56797))
+* **internal:** update comment in script ([b7f1c3e](https://github.com/sst/opencode-sdk-go/commit/b7f1c3e16935c71e243004b8f321d661cd8e9474))
+* lint tests ([616796b](https://github.com/sst/opencode-sdk-go/commit/616796b761704bde6be5c6c2428f28c79c7f05ff))
+* lint tests in subpackages ([50c82ff](https://github.com/sst/opencode-sdk-go/commit/50c82ff0757c973834b68adc22566b70f767b611))
+* sync repo ([2f34d5d](https://github.com/sst/opencode-sdk-go/commit/2f34d5d53e56e9cdc3df99be7ee7efc83dd977a3))
+* update @stainless-api/prism-cli to v5.15.0 ([2f24852](https://github.com/sst/opencode-sdk-go/commit/2f2485216d4f4891d1fbfbc23ff8410c2f35152a))

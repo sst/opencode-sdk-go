@@ -40,41 +40,221 @@ func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (
 	return
 }
 
+type AgentConfig struct {
+	// Description of when to use the agent
+	Description string                 `json:"description"`
+	Disable     bool                   `json:"disable"`
+	Mode        AgentConfigMode        `json:"mode"`
+	Model       string                 `json:"model"`
+	Permission  AgentConfigPermission  `json:"permission"`
+	Prompt      string                 `json:"prompt"`
+	Temperature float64                `json:"temperature"`
+	Tools       map[string]bool        `json:"tools"`
+	TopP        float64                `json:"top_p"`
+	ExtraFields map[string]interface{} `json:"-,extras"`
+	JSON        agentConfigJSON        `json:"-"`
+}
+
+// agentConfigJSON contains the JSON metadata for the struct [AgentConfig]
+type agentConfigJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AgentConfig) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r agentConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+type AgentConfigMode string
+
+const (
+	AgentConfigModeSubagent AgentConfigMode = "subagent"
+	AgentConfigModePrimary  AgentConfigMode = "primary"
+	AgentConfigModeAll      AgentConfigMode = "all"
+)
+
+func (r AgentConfigMode) IsKnown() bool {
+	switch r {
+	case AgentConfigModeSubagent, AgentConfigModePrimary, AgentConfigModeAll:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermission struct {
+	Bash     AgentConfigPermissionBashUnion `json:"bash"`
+	Edit     AgentConfigPermissionEdit      `json:"edit"`
+	Webfetch AgentConfigPermissionWebfetch  `json:"webfetch"`
+	JSON     agentConfigPermissionJSON      `json:"-"`
+}
+
+// agentConfigPermissionJSON contains the JSON metadata for the struct
+// [AgentConfigPermission]
+type agentConfigPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AgentConfigPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r agentConfigPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [AgentConfigPermissionBashString] or
+// [AgentConfigPermissionBashMap].
+type AgentConfigPermissionBashUnion interface {
+	implementsAgentConfigPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AgentConfigPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(AgentConfigPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AgentConfigPermissionBashMap{}),
+		},
+	)
+}
+
+type AgentConfigPermissionBashString string
+
+const (
+	AgentConfigPermissionBashStringAsk   AgentConfigPermissionBashString = "ask"
+	AgentConfigPermissionBashStringAllow AgentConfigPermissionBashString = "allow"
+	AgentConfigPermissionBashStringDeny  AgentConfigPermissionBashString = "deny"
+)
+
+func (r AgentConfigPermissionBashString) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionBashStringAsk, AgentConfigPermissionBashStringAllow, AgentConfigPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r AgentConfigPermissionBashString) implementsAgentConfigPermissionBashUnion() {}
+
+type AgentConfigPermissionBashMap map[string]AgentConfigPermissionBashMapItem
+
+func (r AgentConfigPermissionBashMap) implementsAgentConfigPermissionBashUnion() {}
+
+type AgentConfigPermissionBashMapItem string
+
+const (
+	AgentConfigPermissionBashMapAsk   AgentConfigPermissionBashMapItem = "ask"
+	AgentConfigPermissionBashMapAllow AgentConfigPermissionBashMapItem = "allow"
+	AgentConfigPermissionBashMapDeny  AgentConfigPermissionBashMapItem = "deny"
+)
+
+func (r AgentConfigPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionBashMapAsk, AgentConfigPermissionBashMapAllow, AgentConfigPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermissionEdit string
+
+const (
+	AgentConfigPermissionEditAsk   AgentConfigPermissionEdit = "ask"
+	AgentConfigPermissionEditAllow AgentConfigPermissionEdit = "allow"
+	AgentConfigPermissionEditDeny  AgentConfigPermissionEdit = "deny"
+)
+
+func (r AgentConfigPermissionEdit) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionEditAsk, AgentConfigPermissionEditAllow, AgentConfigPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermissionWebfetch string
+
+const (
+	AgentConfigPermissionWebfetchAsk   AgentConfigPermissionWebfetch = "ask"
+	AgentConfigPermissionWebfetchAllow AgentConfigPermissionWebfetch = "allow"
+	AgentConfigPermissionWebfetchDeny  AgentConfigPermissionWebfetch = "deny"
+)
+
+func (r AgentConfigPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionWebfetchAsk, AgentConfigPermissionWebfetchAllow, AgentConfigPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
 type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema"`
-	// Modes configuration, see https://opencode.ai/docs/modes
+	// Agent configuration, see https://opencode.ai/docs/agent
 	Agent ConfigAgent `json:"agent"`
 	// @deprecated Use 'share' field instead. Share newly created sessions
 	// automatically
 	Autoshare bool `json:"autoshare"`
 	// Automatically update to the latest version
 	Autoupdate bool `json:"autoupdate"`
+	// Command configuration, see https://opencode.ai/docs/commands
+	Command map[string]ConfigCommand `json:"command"`
 	// Disable providers that are loaded automatically
-	DisabledProviders []string           `json:"disabled_providers"`
-	Experimental      ConfigExperimental `json:"experimental"`
+	DisabledProviders []string                   `json:"disabled_providers"`
+	Experimental      ConfigExperimental         `json:"experimental"`
+	Formatter         map[string]ConfigFormatter `json:"formatter"`
 	// Additional instruction files or patterns to include
 	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
 	Keybinds KeybindsConfig `json:"keybinds"`
 	// @deprecated Always uses stretch layout.
-	Layout ConfigLayout `json:"layout"`
+	Layout ConfigLayout         `json:"layout"`
+	Lsp    map[string]ConfigLsp `json:"lsp"`
 	// MCP (Model Context Protocol) server configurations
 	Mcp map[string]ConfigMcp `json:"mcp"`
-	// Modes configuration, see https://opencode.ai/docs/modes
+	// @deprecated Use `agent` field instead.
 	Mode ConfigMode `json:"mode"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
-	Model string `json:"model"`
+	Model      string           `json:"model"`
+	Permission ConfigPermission `json:"permission"`
+	Plugin     []string         `json:"plugin"`
 	// Custom provider configurations and model overrides
 	Provider map[string]ConfigProvider `json:"provider"`
 	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
 	// enables automatic sharing, 'disabled' disables all sharing
 	Share ConfigShare `json:"share"`
-	// Small model to use for tasks like summarization and title generation in the
-	// format of provider/model
+	// Small model to use for tasks like title generation in the format of
+	// provider/model
 	SmallModel string `json:"small_model"`
+	Snapshot   bool   `json:"snapshot"`
 	// Theme name to use for the interface
-	Theme string `json:"theme"`
+	Theme string          `json:"theme"`
+	Tools map[string]bool `json:"tools"`
+	// TUI specific settings
+	Tui ConfigTui `json:"tui"`
 	// Custom username to display in conversations instead of system username
 	Username string     `json:"username"`
 	JSON     configJSON `json:"-"`
@@ -86,18 +266,26 @@ type configJSON struct {
 	Agent             apijson.Field
 	Autoshare         apijson.Field
 	Autoupdate        apijson.Field
+	Command           apijson.Field
 	DisabledProviders apijson.Field
 	Experimental      apijson.Field
+	Formatter         apijson.Field
 	Instructions      apijson.Field
 	Keybinds          apijson.Field
 	Layout            apijson.Field
+	Lsp               apijson.Field
 	Mcp               apijson.Field
 	Mode              apijson.Field
 	Model             apijson.Field
+	Permission        apijson.Field
+	Plugin            apijson.Field
 	Provider          apijson.Field
 	Share             apijson.Field
 	SmallModel        apijson.Field
+	Snapshot          apijson.Field
 	Theme             apijson.Field
+	Tools             apijson.Field
+	Tui               apijson.Field
 	Username          apijson.Field
 	raw               string
 	ExtraFields       map[string]apijson.Field
@@ -111,16 +299,20 @@ func (r configJSON) RawJSON() string {
 	return r.raw
 }
 
-// Modes configuration, see https://opencode.ai/docs/modes
+// Agent configuration, see https://opencode.ai/docs/agent
 type ConfigAgent struct {
-	General     ConfigAgentGeneral     `json:"general"`
-	ExtraFields map[string]ConfigAgent `json:"-,extras"`
+	Build       AgentConfig            `json:"build"`
+	General     AgentConfig            `json:"general"`
+	Plan        AgentConfig            `json:"plan"`
+	ExtraFields map[string]AgentConfig `json:"-,extras"`
 	JSON        configAgentJSON        `json:"-"`
 }
 
 // configAgentJSON contains the JSON metadata for the struct [ConfigAgent]
 type configAgentJSON struct {
+	Build       apijson.Field
 	General     apijson.Field
+	Plan        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -133,25 +325,29 @@ func (r configAgentJSON) RawJSON() string {
 	return r.raw
 }
 
-type ConfigAgentGeneral struct {
-	Description string                 `json:"description,required"`
-	JSON        configAgentGeneralJSON `json:"-"`
-	ModeConfig
+type ConfigCommand struct {
+	Template    string            `json:"template,required"`
+	Agent       string            `json:"agent"`
+	Description string            `json:"description"`
+	Model       string            `json:"model"`
+	JSON        configCommandJSON `json:"-"`
 }
 
-// configAgentGeneralJSON contains the JSON metadata for the struct
-// [ConfigAgentGeneral]
-type configAgentGeneralJSON struct {
+// configCommandJSON contains the JSON metadata for the struct [ConfigCommand]
+type configCommandJSON struct {
+	Template    apijson.Field
+	Agent       apijson.Field
 	Description apijson.Field
+	Model       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *ConfigAgentGeneral) UnmarshalJSON(data []byte) (err error) {
+func (r *ConfigCommand) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r configAgentGeneralJSON) RawJSON() string {
+func (r configCommandJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -245,6 +441,32 @@ func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
 	return r.raw
 }
 
+type ConfigFormatter struct {
+	Command     []string            `json:"command"`
+	Disabled    bool                `json:"disabled"`
+	Environment map[string]string   `json:"environment"`
+	Extensions  []string            `json:"extensions"`
+	JSON        configFormatterJSON `json:"-"`
+}
+
+// configFormatterJSON contains the JSON metadata for the struct [ConfigFormatter]
+type configFormatterJSON struct {
+	Command     apijson.Field
+	Disabled    apijson.Field
+	Environment apijson.Field
+	Extensions  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigFormatter) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configFormatterJSON) RawJSON() string {
+	return r.raw
+}
+
 // @deprecated Always uses stretch layout.
 type ConfigLayout string
 
@@ -260,6 +482,139 @@ func (r ConfigLayout) IsKnown() bool {
 	}
 	return false
 }
+
+type ConfigLsp struct {
+	// This field can have the runtime type of [[]string].
+	Command  interface{} `json:"command"`
+	Disabled bool        `json:"disabled"`
+	// This field can have the runtime type of [map[string]string].
+	Env interface{} `json:"env"`
+	// This field can have the runtime type of [[]string].
+	Extensions interface{} `json:"extensions"`
+	// This field can have the runtime type of [map[string]interface{}].
+	Initialization interface{}   `json:"initialization"`
+	JSON           configLspJSON `json:"-"`
+	union          ConfigLspUnion
+}
+
+// configLspJSON contains the JSON metadata for the struct [ConfigLsp]
+type configLspJSON struct {
+	Command        apijson.Field
+	Disabled       apijson.Field
+	Env            apijson.Field
+	Extensions     apijson.Field
+	Initialization apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r configLspJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConfigLsp) UnmarshalJSON(data []byte) (err error) {
+	*r = ConfigLsp{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConfigLspUnion] interface which you can cast to the specific
+// types for more type safety.
+//
+// Possible runtime types of the union are [ConfigLspDisabled], [ConfigLspObject].
+func (r ConfigLsp) AsUnion() ConfigLspUnion {
+	return r.union
+}
+
+// Union satisfied by [ConfigLspDisabled] or [ConfigLspObject].
+type ConfigLspUnion interface {
+	implementsConfigLsp()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigLspUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigLspDisabled{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigLspObject{}),
+		},
+	)
+}
+
+type ConfigLspDisabled struct {
+	Disabled ConfigLspDisabledDisabled `json:"disabled,required"`
+	JSON     configLspDisabledJSON     `json:"-"`
+}
+
+// configLspDisabledJSON contains the JSON metadata for the struct
+// [ConfigLspDisabled]
+type configLspDisabledJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigLspDisabled) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configLspDisabledJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConfigLspDisabled) implementsConfigLsp() {}
+
+type ConfigLspDisabledDisabled bool
+
+const (
+	ConfigLspDisabledDisabledTrue ConfigLspDisabledDisabled = true
+)
+
+func (r ConfigLspDisabledDisabled) IsKnown() bool {
+	switch r {
+	case ConfigLspDisabledDisabledTrue:
+		return true
+	}
+	return false
+}
+
+type ConfigLspObject struct {
+	Command        []string               `json:"command,required"`
+	Disabled       bool                   `json:"disabled"`
+	Env            map[string]string      `json:"env"`
+	Extensions     []string               `json:"extensions"`
+	Initialization map[string]interface{} `json:"initialization"`
+	JSON           configLspObjectJSON    `json:"-"`
+}
+
+// configLspObjectJSON contains the JSON metadata for the struct [ConfigLspObject]
+type configLspObjectJSON struct {
+	Command        apijson.Field
+	Disabled       apijson.Field
+	Env            apijson.Field
+	Extensions     apijson.Field
+	Initialization apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *ConfigLspObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configLspObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConfigLspObject) implementsConfigLsp() {}
 
 type ConfigMcp struct {
 	// Type of MCP server connection
@@ -349,12 +704,12 @@ func (r ConfigMcpType) IsKnown() bool {
 	return false
 }
 
-// Modes configuration, see https://opencode.ai/docs/modes
+// @deprecated Use `agent` field instead.
 type ConfigMode struct {
-	Build       ModeConfig            `json:"build"`
-	Plan        ModeConfig            `json:"plan"`
-	ExtraFields map[string]ModeConfig `json:"-,extras"`
-	JSON        configModeJSON        `json:"-"`
+	Build       AgentConfig            `json:"build"`
+	Plan        AgentConfig            `json:"plan"`
+	ExtraFields map[string]AgentConfig `json:"-,extras"`
+	JSON        configModeJSON         `json:"-"`
 }
 
 // configModeJSON contains the JSON metadata for the struct [ConfigMode]
@@ -373,11 +728,126 @@ func (r configModeJSON) RawJSON() string {
 	return r.raw
 }
 
+type ConfigPermission struct {
+	Bash     ConfigPermissionBashUnion `json:"bash"`
+	Edit     ConfigPermissionEdit      `json:"edit"`
+	Webfetch ConfigPermissionWebfetch  `json:"webfetch"`
+	JSON     configPermissionJSON      `json:"-"`
+}
+
+// configPermissionJSON contains the JSON metadata for the struct
+// [ConfigPermission]
+type configPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigPermissionBashString] or [ConfigPermissionBashMap].
+type ConfigPermissionBashUnion interface {
+	implementsConfigPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigPermissionBashString string
+
+const (
+	ConfigPermissionBashStringAsk   ConfigPermissionBashString = "ask"
+	ConfigPermissionBashStringAllow ConfigPermissionBashString = "allow"
+	ConfigPermissionBashStringDeny  ConfigPermissionBashString = "deny"
+)
+
+func (r ConfigPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigPermissionBashStringAsk, ConfigPermissionBashStringAllow, ConfigPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigPermissionBashString) implementsConfigPermissionBashUnion() {}
+
+type ConfigPermissionBashMap map[string]ConfigPermissionBashMapItem
+
+func (r ConfigPermissionBashMap) implementsConfigPermissionBashUnion() {}
+
+type ConfigPermissionBashMapItem string
+
+const (
+	ConfigPermissionBashMapAsk   ConfigPermissionBashMapItem = "ask"
+	ConfigPermissionBashMapAllow ConfigPermissionBashMapItem = "allow"
+	ConfigPermissionBashMapDeny  ConfigPermissionBashMapItem = "deny"
+)
+
+func (r ConfigPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigPermissionBashMapAsk, ConfigPermissionBashMapAllow, ConfigPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigPermissionEdit string
+
+const (
+	ConfigPermissionEditAsk   ConfigPermissionEdit = "ask"
+	ConfigPermissionEditAllow ConfigPermissionEdit = "allow"
+	ConfigPermissionEditDeny  ConfigPermissionEdit = "deny"
+)
+
+func (r ConfigPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigPermissionEditAsk, ConfigPermissionEditAllow, ConfigPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigPermissionWebfetch string
+
+const (
+	ConfigPermissionWebfetchAsk   ConfigPermissionWebfetch = "ask"
+	ConfigPermissionWebfetchAllow ConfigPermissionWebfetch = "allow"
+	ConfigPermissionWebfetchDeny  ConfigPermissionWebfetch = "deny"
+)
+
+func (r ConfigPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigPermissionWebfetchAsk, ConfigPermissionWebfetchAllow, ConfigPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
 type ConfigProvider struct {
-	Models  map[string]ConfigProviderModel `json:"models,required"`
 	ID      string                         `json:"id"`
 	API     string                         `json:"api"`
 	Env     []string                       `json:"env"`
+	Models  map[string]ConfigProviderModel `json:"models"`
 	Name    string                         `json:"name"`
 	Npm     string                         `json:"npm"`
 	Options ConfigProviderOptions          `json:"options"`
@@ -386,10 +856,10 @@ type ConfigProvider struct {
 
 // configProviderJSON contains the JSON metadata for the struct [ConfigProvider]
 type configProviderJSON struct {
-	Models      apijson.Field
 	ID          apijson.Field
 	API         apijson.Field
 	Env         apijson.Field
+	Models      apijson.Field
 	Name        apijson.Field
 	Npm         apijson.Field
 	Options     apijson.Field
@@ -536,20 +1006,48 @@ func (r ConfigShare) IsKnown() bool {
 	return false
 }
 
+// TUI specific settings
+type ConfigTui struct {
+	// TUI scroll speed
+	ScrollSpeed float64       `json:"scroll_speed,required"`
+	JSON        configTuiJSON `json:"-"`
+}
+
+// configTuiJSON contains the JSON metadata for the struct [ConfigTui]
+type configTuiJSON struct {
+	ScrollSpeed apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigTui) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configTuiJSON) RawJSON() string {
+	return r.raw
+}
+
 type KeybindsConfig struct {
+	// Next agent
+	AgentCycle string `json:"agent_cycle,required"`
+	// Previous agent
+	AgentCycleReverse string `json:"agent_cycle_reverse,required"`
+	// List agents
+	AgentList string `json:"agent_list,required"`
 	// Exit the application
 	AppExit string `json:"app_exit,required"`
 	// Show help dialog
 	AppHelp string `json:"app_help,required"`
 	// Open external editor
 	EditorOpen string `json:"editor_open,required"`
-	// Close file
+	// @deprecated Close file
 	FileClose string `json:"file_close,required"`
-	// Split/unified diff
+	// @deprecated Split/unified diff
 	FileDiffToggle string `json:"file_diff_toggle,required"`
-	// List files
+	// @deprecated Currently not available. List files
 	FileList string `json:"file_list,required"`
-	// Search file
+	// @deprecated Search file
 	FileSearch string `json:"file_search,required"`
 	// Clear input field
 	InputClear string `json:"input_clear,required"`
@@ -571,15 +1069,15 @@ type KeybindsConfig struct {
 	MessagesHalfPageUp string `json:"messages_half_page_up,required"`
 	// Navigate to last message
 	MessagesLast string `json:"messages_last,required"`
-	// Toggle layout
+	// @deprecated Toggle layout
 	MessagesLayoutToggle string `json:"messages_layout_toggle,required"`
-	// Navigate to next message
+	// @deprecated Navigate to next message
 	MessagesNext string `json:"messages_next,required"`
 	// Scroll messages down by one page
 	MessagesPageDown string `json:"messages_page_down,required"`
 	// Scroll messages up by one page
 	MessagesPageUp string `json:"messages_page_up,required"`
-	// Navigate to previous message
+	// @deprecated Navigate to previous message
 	MessagesPrevious string `json:"messages_previous,required"`
 	// Redo message
 	MessagesRedo string `json:"messages_redo,required"`
@@ -587,10 +1085,18 @@ type KeybindsConfig struct {
 	MessagesRevert string `json:"messages_revert,required"`
 	// Undo message
 	MessagesUndo string `json:"messages_undo,required"`
+	// Next recent model
+	ModelCycleRecent string `json:"model_cycle_recent,required"`
+	// Previous recent model
+	ModelCycleRecentReverse string `json:"model_cycle_recent_reverse,required"`
 	// List available models
 	ModelList string `json:"model_list,required"`
 	// Create/update AGENTS.md
 	ProjectInit string `json:"project_init,required"`
+	// Cycle to next child session
+	SessionChildCycle string `json:"session_child_cycle,required"`
+	// Cycle to previous child session
+	SessionChildCycleReverse string `json:"session_child_cycle_reverse,required"`
 	// Compact the session
 	SessionCompact string `json:"session_compact,required"`
 	// Export session to editor
@@ -603,14 +1109,22 @@ type KeybindsConfig struct {
 	SessionNew string `json:"session_new,required"`
 	// Share current session
 	SessionShare string `json:"session_share,required"`
+	// Show session timeline
+	SessionTimeline string `json:"session_timeline,required"`
 	// Unshare current session
 	SessionUnshare string `json:"session_unshare,required"`
-	// Next mode
+	// @deprecated use agent_cycle. Next agent
+	SwitchAgent string `json:"switch_agent,required"`
+	// @deprecated use agent_cycle_reverse. Previous agent
+	SwitchAgentReverse string `json:"switch_agent_reverse,required"`
+	// @deprecated use agent_cycle. Next mode
 	SwitchMode string `json:"switch_mode,required"`
-	// Previous Mode
+	// @deprecated use agent_cycle_reverse. Previous mode
 	SwitchModeReverse string `json:"switch_mode_reverse,required"`
 	// List available themes
 	ThemeList string `json:"theme_list,required"`
+	// Toggle thinking blocks
+	ThinkingBlocks string `json:"thinking_blocks,required"`
 	// Toggle tool details
 	ToolDetails string             `json:"tool_details,required"`
 	JSON        keybindsConfigJSON `json:"-"`
@@ -618,46 +1132,57 @@ type KeybindsConfig struct {
 
 // keybindsConfigJSON contains the JSON metadata for the struct [KeybindsConfig]
 type keybindsConfigJSON struct {
-	AppExit              apijson.Field
-	AppHelp              apijson.Field
-	EditorOpen           apijson.Field
-	FileClose            apijson.Field
-	FileDiffToggle       apijson.Field
-	FileList             apijson.Field
-	FileSearch           apijson.Field
-	InputClear           apijson.Field
-	InputNewline         apijson.Field
-	InputPaste           apijson.Field
-	InputSubmit          apijson.Field
-	Leader               apijson.Field
-	MessagesCopy         apijson.Field
-	MessagesFirst        apijson.Field
-	MessagesHalfPageDown apijson.Field
-	MessagesHalfPageUp   apijson.Field
-	MessagesLast         apijson.Field
-	MessagesLayoutToggle apijson.Field
-	MessagesNext         apijson.Field
-	MessagesPageDown     apijson.Field
-	MessagesPageUp       apijson.Field
-	MessagesPrevious     apijson.Field
-	MessagesRedo         apijson.Field
-	MessagesRevert       apijson.Field
-	MessagesUndo         apijson.Field
-	ModelList            apijson.Field
-	ProjectInit          apijson.Field
-	SessionCompact       apijson.Field
-	SessionExport        apijson.Field
-	SessionInterrupt     apijson.Field
-	SessionList          apijson.Field
-	SessionNew           apijson.Field
-	SessionShare         apijson.Field
-	SessionUnshare       apijson.Field
-	SwitchMode           apijson.Field
-	SwitchModeReverse    apijson.Field
-	ThemeList            apijson.Field
-	ToolDetails          apijson.Field
-	raw                  string
-	ExtraFields          map[string]apijson.Field
+	AgentCycle               apijson.Field
+	AgentCycleReverse        apijson.Field
+	AgentList                apijson.Field
+	AppExit                  apijson.Field
+	AppHelp                  apijson.Field
+	EditorOpen               apijson.Field
+	FileClose                apijson.Field
+	FileDiffToggle           apijson.Field
+	FileList                 apijson.Field
+	FileSearch               apijson.Field
+	InputClear               apijson.Field
+	InputNewline             apijson.Field
+	InputPaste               apijson.Field
+	InputSubmit              apijson.Field
+	Leader                   apijson.Field
+	MessagesCopy             apijson.Field
+	MessagesFirst            apijson.Field
+	MessagesHalfPageDown     apijson.Field
+	MessagesHalfPageUp       apijson.Field
+	MessagesLast             apijson.Field
+	MessagesLayoutToggle     apijson.Field
+	MessagesNext             apijson.Field
+	MessagesPageDown         apijson.Field
+	MessagesPageUp           apijson.Field
+	MessagesPrevious         apijson.Field
+	MessagesRedo             apijson.Field
+	MessagesRevert           apijson.Field
+	MessagesUndo             apijson.Field
+	ModelCycleRecent         apijson.Field
+	ModelCycleRecentReverse  apijson.Field
+	ModelList                apijson.Field
+	ProjectInit              apijson.Field
+	SessionChildCycle        apijson.Field
+	SessionChildCycleReverse apijson.Field
+	SessionCompact           apijson.Field
+	SessionExport            apijson.Field
+	SessionInterrupt         apijson.Field
+	SessionList              apijson.Field
+	SessionNew               apijson.Field
+	SessionShare             apijson.Field
+	SessionTimeline          apijson.Field
+	SessionUnshare           apijson.Field
+	SwitchAgent              apijson.Field
+	SwitchAgentReverse       apijson.Field
+	SwitchMode               apijson.Field
+	SwitchModeReverse        apijson.Field
+	ThemeList                apijson.Field
+	ThinkingBlocks           apijson.Field
+	ToolDetails              apijson.Field
+	raw                      string
+	ExtraFields              map[string]apijson.Field
 }
 
 func (r *KeybindsConfig) UnmarshalJSON(data []byte) (err error) {
@@ -760,32 +1285,4 @@ func (r McpRemoteConfigType) IsKnown() bool {
 		return true
 	}
 	return false
-}
-
-type ModeConfig struct {
-	Disable     bool            `json:"disable"`
-	Model       string          `json:"model"`
-	Prompt      string          `json:"prompt"`
-	Temperature float64         `json:"temperature"`
-	Tools       map[string]bool `json:"tools"`
-	JSON        modeConfigJSON  `json:"-"`
-}
-
-// modeConfigJSON contains the JSON metadata for the struct [ModeConfig]
-type modeConfigJSON struct {
-	Disable     apijson.Field
-	Model       apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ModeConfig) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modeConfigJSON) RawJSON() string {
-	return r.raw
 }
