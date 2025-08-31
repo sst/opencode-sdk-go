@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/internal/testutil"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
+	"github.com/sst/opencode-sdk-go/internal/testutil"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
 func TestCommandList(t *testing.T) {
@@ -24,7 +24,6 @@ func TestCommandList(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Command.List(context.TODO())
 	if err != nil {

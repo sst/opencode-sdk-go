@@ -8,29 +8,19 @@ import (
 
 type UnionVariant struct {
 	TypeFilter         gjson.Type
-	DiscriminatorValue any
+	DiscriminatorValue interface{}
 	Type               reflect.Type
 }
 
 var unionRegistry = map[reflect.Type]unionEntry{}
-var unionVariants = map[reflect.Type]any{}
+var unionVariants = map[reflect.Type]interface{}{}
 
 type unionEntry struct {
 	discriminatorKey string
 	variants         []UnionVariant
 }
 
-func Discriminator[T any](value any) UnionVariant {
-	var zero T
-	return UnionVariant{
-		TypeFilter:         gjson.JSON,
-		DiscriminatorValue: value,
-		Type:               reflect.TypeOf(zero),
-	}
-}
-
-func RegisterUnion[T any](discriminator string, variants ...UnionVariant) {
-	typ := reflect.TypeOf((*T)(nil)).Elem()
+func RegisterUnion(typ reflect.Type, discriminator string, variants ...UnionVariant) {
 	unionRegistry[typ] = unionEntry{
 		discriminatorKey: discriminator,
 		variants:         variants,

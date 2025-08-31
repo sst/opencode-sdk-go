@@ -1,25 +1,33 @@
 # Opencode Go API Library
 
-<a href="https://pkg.go.dev/github.com/stainless-sdks/opencode-go"><img src="https://pkg.go.dev/badge/github.com/stainless-sdks/opencode-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go"><img src="https://pkg.go.dev/badge/github.com/sst/opencode-sdk-go.svg" alt="Go Reference"></a>
 
-The Opencode Go library provides convenient access to the Opencode REST API
+The Opencode Go library provides convenient access to the [Opencode REST API](https://opencode.ai/docs)
 from applications written in Go.
 
 It is generated with [Stainless](https://www.stainless.com/).
 
 ## Installation
 
+<!-- x-release-please-start-version -->
+
 ```go
 import (
-	"github.com/stainless-sdks/opencode-go" // imported as opencode
+	"github.com/sst/opencode-sdk-go" // imported as opencode
 )
 ```
 
+<!-- x-release-please-end -->
+
 Or to pin the version:
 
+<!-- x-release-please-start-version -->
+
 ```sh
-go get -u 'github.com/stainless-sdks/opencode-go@v0.0.1'
+go get -u 'github.com/sst/opencode-sdk-go@v0.0.1'
 ```
+
+<!-- x-release-please-end -->
 
 ## Requirements
 
@@ -36,209 +44,89 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
 )
 
 func main() {
-	client := opencode.NewClient(
-		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENCODE_API_KEY")
-	)
-	projects, err := client.Project.List(context.TODO())
+	client := opencode.NewClient()
+	sessions, err := client.Session.List(context.TODO())
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Printf("%+v\n", projects)
+	fmt.Printf("%+v\n", sessions)
 }
 
 ```
 
 ### Request fields
 
-The opencode library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
-semantics from the Go 1.24+ `encoding/json` release for request fields.
+All request parameters are wrapped in a generic `Field` type,
+which we use to distinguish zero values from null or omitted fields.
 
-Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`json:"...,required"\`</code>. These
-fields are always serialized, even their zero values.
+This prevents accidentally sending a zero value if you forget a required parameter,
+and enables explicitly sending `null`, `false`, `''`, or `0` on optional parameters.
+Any field not specified is not sent.
 
-Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be set with the provided constructors, `opencode.String(string)`, `opencode.Int(int64)`, etc.
-
-Any `param.Opt[T]`, map, slice, struct or string enum uses the
-tag <code>\`json:"...,omitzero"\`</code>. Its zero value is considered omitted.
-
-The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
+To construct fields with values, use the helpers `String()`, `Int()`, `Float()`, or most commonly, the generic `F[T]()`.
+To send a null, use `Null[T]()`, and to send a nonconforming value, use `Raw[T](any)`. For example:
 
 ```go
-p := opencode.ExampleParams{
-	ID:   "id_xxx",               // required property
-	Name: opencode.String("..."), // optional property
+params := FooParams{
+	Name: opencode.F("hello"),
 
-	Point: opencode.Point{
-		X: 0,               // required field will serialize as 0
-		Y: opencode.Int(1), // optional field will serialize as 1
-		// ... omitted non-required fields will not be serialized
-	},
+	// Explicitly send `"description": null`
+	Description: opencode.Null[string](),
 
-	Origin: opencode.Origin{}, // the zero value of [Origin] is considered omitted
-}
-```
+	Point: opencode.F(opencode.Point{
+		X: opencode.Int(0),
+		Y: opencode.Int(1),
 
-To send `null` instead of a `param.Opt[T]`, use `param.Null[T]()`.
-To send `null` instead of a struct `T`, use `param.NullStruct[T]()`.
-
-```go
-p.Name = param.Null[string]()       // 'null' instead of string
-p.Point = param.NullStruct[Point]() // 'null' instead of struct
-
-param.IsNull(p.Name)  // true
-param.IsNull(p.Point) // true
-```
-
-Request structs contain a `.SetExtraFields(map[string]any)` method which can send non-conforming
-fields in the request body. Extra fields overwrite any struct fields with a matching
-key. For security reasons, only use `SetExtraFields` with trusted data.
-
-To send a custom value instead of a struct, use `param.Override[T](value)`.
-
-```go
-// In cases where the API specifies a given type,
-// but you want to send something else, use [SetExtraFields]:
-p.SetExtraFields(map[string]any{
-	"x": 0.01, // send "x" as a float instead of int
-})
-
-// Send a number instead of an object
-custom := param.Override[opencode.FooParams](12)
-```
-
-### Request unions
-
-Unions are represented as a struct with fields prefixed by "Of" for each of it's variants,
-only one field can be non-zero. The non-zero field will be serialized.
-
-Sub-properties of the union can be accessed via methods on the union struct.
-These methods return a mutable pointer to the underlying data, if present.
-
-```go
-// Only one field can be non-zero, use param.IsOmitted() to check if a field is set
-type AnimalUnionParam struct {
-	OfCat *Cat `json:",omitzero,inline`
-	OfDog *Dog `json:",omitzero,inline`
-}
-
-animal := AnimalUnionParam{
-	OfCat: &Cat{
-		Name: "Whiskers",
-		Owner: PersonParam{
-			Address: AddressParam{Street: "3333 Coyote Hill Rd", Zip: 0},
-		},
-	},
-}
-
-// Mutating a field
-if address := animal.GetOwner().GetAddress(); address != nil {
-	address.ZipCode = 94304
+		// In cases where the API specifies a given type,
+		// but you want to send something else, use `Raw`:
+		Z: opencode.Raw[int64](0.01), // sends a float
+	}),
 }
 ```
 
 ### Response objects
 
-All fields in response structs are ordinary value types (not pointers or wrappers).
-Response structs also include a special `JSON` field containing metadata about
-each property.
+All fields in response structs are value types (not pointers or wrappers).
+
+If a given field is `null`, not present, or invalid, the corresponding field
+will simply be its zero value.
+
+All response structs also include a special `JSON` field, containing more detailed
+information about each property, which you can use like so:
 
 ```go
-type Animal struct {
-	Name   string `json:"name,nullable"`
-	Owners int    `json:"owners"`
-	Age    int    `json:"age"`
-	JSON   struct {
-		Name        respjson.Field
-		Owner       respjson.Field
-		Age         respjson.Field
-		ExtraFields map[string]respjson.Field
-	} `json:"-"`
+if res.Name == "" {
+	// true if `"name"` is either not present or explicitly null
+	res.JSON.Name.IsNull()
+
+	// true if the `"name"` key was not present in the response JSON at all
+	res.JSON.Name.IsMissing()
+
+	// When the API returns data that cannot be coerced to the expected type:
+	if res.JSON.Name.IsInvalid() {
+		raw := res.JSON.Name.Raw()
+
+		legacyName := struct{
+			First string `json:"first"`
+			Last  string `json:"last"`
+		}{}
+		json.Unmarshal([]byte(raw), &legacyName)
+		name = legacyName.First + " " + legacyName.Last
+	}
 }
 ```
 
-To handle optional data, use the `.Valid()` method on the JSON field.
-`.Valid()` returns true if a field is not `null`, not present, or couldn't be marshaled.
-
-If `.Valid()` is false, the corresponding field will simply be its zero value.
-
-```go
-raw := `{"owners": 1, "name": null}`
-
-var res Animal
-json.Unmarshal([]byte(raw), &res)
-
-// Accessing regular fields
-
-res.Owners // 1
-res.Name   // ""
-res.Age    // 0
-
-// Optional field checks
-
-res.JSON.Owners.Valid() // true
-res.JSON.Name.Valid()   // false
-res.JSON.Age.Valid()    // false
-
-// Raw JSON values
-
-res.JSON.Owners.Raw()                  // "1"
-res.JSON.Name.Raw() == "null"          // true
-res.JSON.Name.Raw() == respjson.Null   // true
-res.JSON.Age.Raw() == ""               // true
-res.JSON.Age.Raw() == respjson.Omitted // true
-```
-
-These `.JSON` structs also include an `ExtraFields` map containing
+These `.JSON` structs also include an `Extras` map containing
 any properties in the json response that were not specified
 in the struct. This can be useful for API features not yet
 present in the SDK.
 
 ```go
 body := res.JSON.ExtraFields["my_unexpected_field"].Raw()
-```
-
-### Response Unions
-
-In responses, unions are represented by a flattened struct containing all possible fields from each of the
-object variants.
-To convert it to a variant use the `.AsFooVariant()` method or the `.AsAny()` method if present.
-
-If a response value union contains primitive values, primitive fields will be alongside
-the properties but prefixed with `Of` and feature the tag `json:"...,inline"`.
-
-```go
-type AnimalUnion struct {
-	// From variants [Dog], [Cat]
-	Owner Person `json:"owner"`
-	// From variant [Dog]
-	DogBreed string `json:"dog_breed"`
-	// From variant [Cat]
-	CatBreed string `json:"cat_breed"`
-	// ...
-
-	JSON struct {
-		Owner respjson.Field
-		// ...
-	} `json:"-"`
-}
-
-// If animal variant
-if animal.Owner.Address.ZipCode == "" {
-	panic("missing zip code")
-}
-
-// Switch on the variant
-switch variant := animal.AsAny().(type) {
-case Dog:
-case Cat:
-default:
-	panic("unexpected type")
-}
 ```
 
 ### RequestOptions
@@ -254,7 +142,7 @@ client := opencode.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Project.List(context.TODO(), ...,
+client.Session.List(context.TODO(), ...,
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -262,9 +150,7 @@ client.Project.List(context.TODO(), ...,
 )
 ```
 
-The request option `option.WithDebugLog(nil)` may be helpful while debugging.
-
-See the [full list of request options](https://pkg.go.dev/github.com/stainless-sdks/opencode-go/option).
+See the [full list of request options](https://pkg.go.dev/github.com/sst/opencode-sdk-go/option).
 
 ### Pagination
 
@@ -285,14 +171,14 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-_, err := client.Project.List(context.TODO())
+_, err := client.Session.List(context.TODO())
 if err != nil {
 	var apierr *opencode.Error
 	if errors.As(err, &apierr) {
 		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
 		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
 	}
-	panic(err.Error()) // GET "/project": 400 Bad Request { ... }
+	panic(err.Error()) // GET "/session": 400 Bad Request { ... }
 }
 ```
 
@@ -310,7 +196,7 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Project.List(
+client.Session.List(
 	ctx,
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -320,14 +206,14 @@ client.Project.List(
 ### File uploads
 
 Request parameters that correspond to file uploads in multipart requests are typed as
-`io.Reader`. The contents of the `io.Reader` will by default be sent as a multipart form
+`param.Field[io.Reader]`. The contents of the `io.Reader` will by default be sent as a multipart form
 part with the file name of "anonymous_file" and content-type of "application/octet-stream".
 
 The file name and content-type can be customized by implementing `Name() string` or `ContentType()
 string` on the run-time type of `io.Reader`. Note that `os.File` implements `Name() string`, so a
 file returned by `os.Open` will be sent with the file name on disk.
 
-We also provide a helper `opencode.File(reader io.Reader, filename string, contentType string)`
+We also provide a helper `opencode.FileParam(reader io.Reader, filename string, contentType string)`
 which can be used to wrap any `io.Reader` with the appropriate file name and content type.
 
 ### Retries
@@ -345,7 +231,7 @@ client := opencode.NewClient(
 )
 
 // Override per-request:
-client.Project.List(context.TODO(), option.WithMaxRetries(5))
+client.Session.List(context.TODO(), option.WithMaxRetries(5))
 ```
 
 ### Accessing raw response data (e.g. response headers)
@@ -356,11 +242,11 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-projects, err := client.Project.List(context.TODO(), option.WithResponseInto(&response))
+sessions, err := client.Session.List(context.TODO(), option.WithResponseInto(&response))
 if err != nil {
 	// handle error
 }
-fmt.Printf("%+v\n", projects)
+fmt.Printf("%+v\n", sessions)
 
 fmt.Printf("Status Code: %d\n", response.StatusCode)
 fmt.Printf("Headers: %+#v\n", response.Header)
@@ -380,7 +266,7 @@ To make requests to undocumented endpoints, you can use `client.Get`, `client.Po
 var (
     // params can be an io.Reader, a []byte, an encoding/json serializable object,
     // or a "…Params" struct defined in this library.
-    params map[string]any
+    params map[string]interface{}
 
     // result can be an []byte, *http.Response, a encoding/json deserializable object,
     // or a model defined in this library.
@@ -399,10 +285,10 @@ or the `option.WithJSONSet()` methods.
 
 ```go
 params := FooNewParams{
-    ID:   "id_xxxx",
-    Data: FooNewParamsData{
-        FirstName: opencode.String("John"),
-    },
+    ID:   opencode.F("id_xxxx"),
+    Data: opencode.F(FooNewParamsData{
+        FirstName: opencode.F("John"),
+    }),
 }
 client.Foo.New(context.Background(), params, option.WithJSONSet("data.last_name", "Doe"))
 ```
@@ -461,7 +347,7 @@ This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) con
 
 We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
 
-We are keen for your feedback; please open an [issue](https://www.github.com/stainless-sdks/opencode-go/issues) with questions, bugs, or suggestions.
+We are keen for your feedback; please open an [issue](https://www.github.com/sst/opencode-sdk-go/issues) with questions, bugs, or suggestions.
 
 ## Contributing
 

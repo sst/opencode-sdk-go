@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/internal/testutil"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
+	"github.com/sst/opencode-sdk-go/internal/testutil"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
 func TestUsage(t *testing.T) {
@@ -22,11 +22,11 @@ func TestUsage(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
-	projects, err := client.Project.List(context.TODO())
+	sessions, err := client.Session.List(context.TODO())
 	if err != nil {
-		t.Fatalf("err should be nil: %s", err.Error())
+		t.Error(err)
+		return
 	}
-	t.Logf("%+v\n", projects)
+	t.Logf("%+v\n", sessions)
 }

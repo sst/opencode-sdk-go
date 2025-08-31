@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/internal/testutil"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
+	"github.com/sst/opencode-sdk-go/internal/testutil"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
 func TestTuiAppendPrompt(t *testing.T) {
@@ -24,10 +24,9 @@ func TestTuiAppendPrompt(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.AppendPrompt(context.TODO(), opencode.TuiAppendPromptParams{
-		Text: "text",
+		Text: opencode.F("text"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -49,7 +48,6 @@ func TestTuiClearPrompt(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.ClearPrompt(context.TODO())
 	if err != nil {
@@ -72,10 +70,9 @@ func TestTuiExecuteCommand(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.ExecuteCommand(context.TODO(), opencode.TuiExecuteCommandParams{
-		Command: "command",
+		Command: opencode.F("command"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -97,7 +94,6 @@ func TestTuiOpenHelp(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.OpenHelp(context.TODO())
 	if err != nil {
@@ -120,7 +116,6 @@ func TestTuiOpenModels(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.OpenModels(context.TODO())
 	if err != nil {
@@ -143,7 +138,6 @@ func TestTuiOpenSessions(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.OpenSessions(context.TODO())
 	if err != nil {
@@ -166,7 +160,6 @@ func TestTuiOpenThemes(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.OpenThemes(context.TODO())
 	if err != nil {
@@ -189,12 +182,11 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.ShowToast(context.TODO(), opencode.TuiShowToastParams{
-		Message: "message",
-		Variant: opencode.TuiShowToastParamsVariantInfo,
-		Title:   opencode.String("title"),
+		Message: opencode.F("message"),
+		Variant: opencode.F(opencode.TuiShowToastParamsVariantInfo),
+		Title:   opencode.F("title"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -216,7 +208,6 @@ func TestTuiSubmitPrompt(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Tui.SubmitPrompt(context.TODO())
 	if err != nil {

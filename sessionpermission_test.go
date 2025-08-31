@@ -8,12 +8,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/opencode-go"
-	"github.com/stainless-sdks/opencode-go/internal/testutil"
-	"github.com/stainless-sdks/opencode-go/option"
+	"github.com/sst/opencode-sdk-go"
+	"github.com/sst/opencode-sdk-go/internal/testutil"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestLogWriteWithOptionalParams(t *testing.T) {
+func TestSessionPermissionRespond(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -24,16 +24,15 @@ func TestLogWriteWithOptionalParams(t *testing.T) {
 	}
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Log.Write(context.TODO(), opencode.LogWriteParams{
-		Level:   opencode.LogWriteParamsLevelDebug,
-		Message: "message",
-		Service: "service",
-		Extra: map[string]any{
-			"foo": "bar",
+	_, err := client.Session.Permissions.Respond(
+		context.TODO(),
+		"id",
+		"permissionID",
+		opencode.SessionPermissionRespondParams{
+			Response: opencode.F(opencode.SessionPermissionRespondParamsResponseOnce),
 		},
-	})
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {

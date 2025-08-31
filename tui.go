@@ -6,10 +6,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/stainless-sdks/opencode-go/internal/apijson"
-	"github.com/stainless-sdks/opencode-go/internal/requestconfig"
-	"github.com/stainless-sdks/opencode-go/option"
-	"github.com/stainless-sdks/opencode-go/packages/param"
+	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/param"
+	"github.com/sst/opencode-sdk-go/internal/requestconfig"
+	"github.com/sst/opencode-sdk-go/option"
 )
 
 // TuiService contains methods and other services that help with interacting with
@@ -25,8 +25,8 @@ type TuiService struct {
 // NewTuiService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewTuiService(opts ...option.RequestOption) (r TuiService) {
-	r = TuiService{}
+func NewTuiService(opts ...option.RequestOption) (r *TuiService) {
+	r = &TuiService{}
 	r.Options = opts
 	return
 }
@@ -104,45 +104,29 @@ func (r *TuiService) SubmitPrompt(ctx context.Context, opts ...option.RequestOpt
 }
 
 type TuiAppendPromptParams struct {
-	Text string `json:"text,required"`
-	paramObj
+	Text param.Field[string] `json:"text,required"`
 }
 
 func (r TuiAppendPromptParams) MarshalJSON() (data []byte, err error) {
-	type shadow TuiAppendPromptParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *TuiAppendPromptParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type TuiExecuteCommandParams struct {
-	Command string `json:"command,required"`
-	paramObj
+	Command param.Field[string] `json:"command,required"`
 }
 
 func (r TuiExecuteCommandParams) MarshalJSON() (data []byte, err error) {
-	type shadow TuiExecuteCommandParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *TuiExecuteCommandParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type TuiShowToastParams struct {
-	Message string `json:"message,required"`
-	// Any of "info", "success", "warning", "error".
-	Variant TuiShowToastParamsVariant `json:"variant,omitzero,required"`
-	Title   param.Opt[string]         `json:"title,omitzero"`
-	paramObj
+	Message param.Field[string]                    `json:"message,required"`
+	Variant param.Field[TuiShowToastParamsVariant] `json:"variant,required"`
+	Title   param.Field[string]                    `json:"title"`
 }
 
 func (r TuiShowToastParams) MarshalJSON() (data []byte, err error) {
-	type shadow TuiShowToastParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *TuiShowToastParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type TuiShowToastParamsVariant string
@@ -153,3 +137,11 @@ const (
 	TuiShowToastParamsVariantWarning TuiShowToastParamsVariant = "warning"
 	TuiShowToastParamsVariantError   TuiShowToastParamsVariant = "error"
 )
+
+func (r TuiShowToastParamsVariant) IsKnown() bool {
+	switch r {
+	case TuiShowToastParamsVariantInfo, TuiShowToastParamsVariantSuccess, TuiShowToastParamsVariantWarning, TuiShowToastParamsVariantError:
+		return true
+	}
+	return false
+}

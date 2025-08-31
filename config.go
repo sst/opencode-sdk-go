@@ -4,14 +4,13 @@ package opencode
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"reflect"
 
-	"github.com/stainless-sdks/opencode-go/internal/apijson"
-	"github.com/stainless-sdks/opencode-go/internal/requestconfig"
-	"github.com/stainless-sdks/opencode-go/option"
-	"github.com/stainless-sdks/opencode-go/packages/respjson"
-	"github.com/stainless-sdks/opencode-go/shared/constant"
+	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/requestconfig"
+	"github.com/sst/opencode-sdk-go/option"
+	"github.com/tidwall/gjson"
 )
 
 // ConfigService contains methods and other services that help with interacting
@@ -27,68 +26,226 @@ type ConfigService struct {
 // NewConfigService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewConfigService(opts ...option.RequestOption) (r ConfigService) {
-	r = ConfigService{}
+func NewConfigService(opts ...option.RequestOption) (r *ConfigService) {
+	r = &ConfigService{}
 	r.Options = opts
 	return
 }
 
 // Get config info
-func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (res *ConfigGetResponse, err error) {
+func (r *ConfigService) Get(ctx context.Context, opts ...option.RequestOption) (res *Config, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "config"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
-// List all providers
-func (r *ConfigService) ListProviders(ctx context.Context, opts ...option.RequestOption) (res *ConfigListProvidersResponse, err error) {
-	opts = append(r.Options[:], opts...)
-	path := "config/providers"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+type AgentConfig struct {
+	// Description of when to use the agent
+	Description string                 `json:"description"`
+	Disable     bool                   `json:"disable"`
+	Mode        AgentConfigMode        `json:"mode"`
+	Model       string                 `json:"model"`
+	Permission  AgentConfigPermission  `json:"permission"`
+	Prompt      string                 `json:"prompt"`
+	Temperature float64                `json:"temperature"`
+	Tools       map[string]bool        `json:"tools"`
+	TopP        float64                `json:"top_p"`
+	ExtraFields map[string]interface{} `json:"-,extras"`
+	JSON        agentConfigJSON        `json:"-"`
 }
 
-type ConfigGetResponse struct {
+// agentConfigJSON contains the JSON metadata for the struct [AgentConfig]
+type agentConfigJSON struct {
+	Description apijson.Field
+	Disable     apijson.Field
+	Mode        apijson.Field
+	Model       apijson.Field
+	Permission  apijson.Field
+	Prompt      apijson.Field
+	Temperature apijson.Field
+	Tools       apijson.Field
+	TopP        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AgentConfig) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r agentConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+type AgentConfigMode string
+
+const (
+	AgentConfigModeSubagent AgentConfigMode = "subagent"
+	AgentConfigModePrimary  AgentConfigMode = "primary"
+	AgentConfigModeAll      AgentConfigMode = "all"
+)
+
+func (r AgentConfigMode) IsKnown() bool {
+	switch r {
+	case AgentConfigModeSubagent, AgentConfigModePrimary, AgentConfigModeAll:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermission struct {
+	Bash     AgentConfigPermissionBashUnion `json:"bash"`
+	Edit     AgentConfigPermissionEdit      `json:"edit"`
+	Webfetch AgentConfigPermissionWebfetch  `json:"webfetch"`
+	JSON     agentConfigPermissionJSON      `json:"-"`
+}
+
+// agentConfigPermissionJSON contains the JSON metadata for the struct
+// [AgentConfigPermission]
+type agentConfigPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AgentConfigPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r agentConfigPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [AgentConfigPermissionBashString] or
+// [AgentConfigPermissionBashMap].
+type AgentConfigPermissionBashUnion interface {
+	implementsAgentConfigPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AgentConfigPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(AgentConfigPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AgentConfigPermissionBashMap{}),
+		},
+	)
+}
+
+type AgentConfigPermissionBashString string
+
+const (
+	AgentConfigPermissionBashStringAsk   AgentConfigPermissionBashString = "ask"
+	AgentConfigPermissionBashStringAllow AgentConfigPermissionBashString = "allow"
+	AgentConfigPermissionBashStringDeny  AgentConfigPermissionBashString = "deny"
+)
+
+func (r AgentConfigPermissionBashString) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionBashStringAsk, AgentConfigPermissionBashStringAllow, AgentConfigPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r AgentConfigPermissionBashString) implementsAgentConfigPermissionBashUnion() {}
+
+type AgentConfigPermissionBashMap map[string]AgentConfigPermissionBashMapItem
+
+func (r AgentConfigPermissionBashMap) implementsAgentConfigPermissionBashUnion() {}
+
+type AgentConfigPermissionBashMapItem string
+
+const (
+	AgentConfigPermissionBashMapAsk   AgentConfigPermissionBashMapItem = "ask"
+	AgentConfigPermissionBashMapAllow AgentConfigPermissionBashMapItem = "allow"
+	AgentConfigPermissionBashMapDeny  AgentConfigPermissionBashMapItem = "deny"
+)
+
+func (r AgentConfigPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionBashMapAsk, AgentConfigPermissionBashMapAllow, AgentConfigPermissionBashMapDeny:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermissionEdit string
+
+const (
+	AgentConfigPermissionEditAsk   AgentConfigPermissionEdit = "ask"
+	AgentConfigPermissionEditAllow AgentConfigPermissionEdit = "allow"
+	AgentConfigPermissionEditDeny  AgentConfigPermissionEdit = "deny"
+)
+
+func (r AgentConfigPermissionEdit) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionEditAsk, AgentConfigPermissionEditAllow, AgentConfigPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type AgentConfigPermissionWebfetch string
+
+const (
+	AgentConfigPermissionWebfetchAsk   AgentConfigPermissionWebfetch = "ask"
+	AgentConfigPermissionWebfetchAllow AgentConfigPermissionWebfetch = "allow"
+	AgentConfigPermissionWebfetchDeny  AgentConfigPermissionWebfetch = "deny"
+)
+
+func (r AgentConfigPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case AgentConfigPermissionWebfetchAsk, AgentConfigPermissionWebfetchAllow, AgentConfigPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
+type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema"`
 	// Agent configuration, see https://opencode.ai/docs/agent
-	Agent ConfigGetResponseAgent `json:"agent"`
+	Agent ConfigAgent `json:"agent"`
 	// @deprecated Use 'share' field instead. Share newly created sessions
 	// automatically
 	Autoshare bool `json:"autoshare"`
 	// Automatically update to the latest version
 	Autoupdate bool `json:"autoupdate"`
 	// Command configuration, see https://opencode.ai/docs/commands
-	Command map[string]ConfigGetResponseCommand `json:"command"`
+	Command map[string]ConfigCommand `json:"command"`
 	// Disable providers that are loaded automatically
-	DisabledProviders []string                              `json:"disabled_providers"`
-	Experimental      ConfigGetResponseExperimental         `json:"experimental"`
-	Formatter         map[string]ConfigGetResponseFormatter `json:"formatter"`
+	DisabledProviders []string                   `json:"disabled_providers"`
+	Experimental      ConfigExperimental         `json:"experimental"`
+	Formatter         map[string]ConfigFormatter `json:"formatter"`
 	// Additional instruction files or patterns to include
 	Instructions []string `json:"instructions"`
 	// Custom keybind configurations
-	Keybinds ConfigGetResponseKeybinds `json:"keybinds"`
+	Keybinds KeybindsConfig `json:"keybinds"`
 	// @deprecated Always uses stretch layout.
-	//
-	// Any of "auto", "stretch".
-	Layout ConfigGetResponseLayout              `json:"layout"`
-	Lsp    map[string]ConfigGetResponseLspUnion `json:"lsp"`
+	Layout ConfigLayout         `json:"layout"`
+	Lsp    map[string]ConfigLsp `json:"lsp"`
 	// MCP (Model Context Protocol) server configurations
-	Mcp map[string]ConfigGetResponseMcpUnion `json:"mcp"`
+	Mcp map[string]ConfigMcp `json:"mcp"`
 	// @deprecated Use `agent` field instead.
-	Mode ConfigGetResponseMode `json:"mode"`
+	Mode ConfigMode `json:"mode"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
-	Model      string                      `json:"model"`
-	Permission ConfigGetResponsePermission `json:"permission"`
-	Plugin     []string                    `json:"plugin"`
+	Model      string           `json:"model"`
+	Permission ConfigPermission `json:"permission"`
+	Plugin     []string         `json:"plugin"`
 	// Custom provider configurations and model overrides
-	Provider map[string]ConfigGetResponseProvider `json:"provider"`
+	Provider map[string]ConfigProvider `json:"provider"`
 	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
 	// enables automatic sharing, 'disabled' disables all sharing
-	//
-	// Any of "manual", "auto", "disabled".
-	Share ConfigGetResponseShare `json:"share"`
+	Share ConfigShare `json:"share"`
 	// Small model to use for tasks like title generation in the format of
 	// provider/model
 	SmallModel string `json:"small_model"`
@@ -97,476 +254,781 @@ type ConfigGetResponse struct {
 	Theme string          `json:"theme"`
 	Tools map[string]bool `json:"tools"`
 	// TUI specific settings
-	Tui ConfigGetResponseTui `json:"tui"`
+	Tui ConfigTui `json:"tui"`
 	// Custom username to display in conversations instead of system username
-	Username string `json:"username"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Schema            respjson.Field
-		Agent             respjson.Field
-		Autoshare         respjson.Field
-		Autoupdate        respjson.Field
-		Command           respjson.Field
-		DisabledProviders respjson.Field
-		Experimental      respjson.Field
-		Formatter         respjson.Field
-		Instructions      respjson.Field
-		Keybinds          respjson.Field
-		Layout            respjson.Field
-		Lsp               respjson.Field
-		Mcp               respjson.Field
-		Mode              respjson.Field
-		Model             respjson.Field
-		Permission        respjson.Field
-		Plugin            respjson.Field
-		Provider          respjson.Field
-		Share             respjson.Field
-		SmallModel        respjson.Field
-		Snapshot          respjson.Field
-		Theme             respjson.Field
-		Tools             respjson.Field
-		Tui               respjson.Field
-		Username          respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
-	} `json:"-"`
+	Username string     `json:"username"`
+	JSON     configJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponse) UnmarshalJSON(data []byte) error {
+// configJSON contains the JSON metadata for the struct [Config]
+type configJSON struct {
+	Schema            apijson.Field
+	Agent             apijson.Field
+	Autoshare         apijson.Field
+	Autoupdate        apijson.Field
+	Command           apijson.Field
+	DisabledProviders apijson.Field
+	Experimental      apijson.Field
+	Formatter         apijson.Field
+	Instructions      apijson.Field
+	Keybinds          apijson.Field
+	Layout            apijson.Field
+	Lsp               apijson.Field
+	Mcp               apijson.Field
+	Mode              apijson.Field
+	Model             apijson.Field
+	Permission        apijson.Field
+	Plugin            apijson.Field
+	Provider          apijson.Field
+	Share             apijson.Field
+	SmallModel        apijson.Field
+	Snapshot          apijson.Field
+	Theme             apijson.Field
+	Tools             apijson.Field
+	Tui               apijson.Field
+	Username          apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *Config) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configJSON) RawJSON() string {
+	return r.raw
 }
 
 // Agent configuration, see https://opencode.ai/docs/agent
-type ConfigGetResponseAgent struct {
-	Build       ConfigGetResponseAgentBuild       `json:"build"`
-	General     ConfigGetResponseAgentGeneral     `json:"general"`
-	Plan        ConfigGetResponseAgentPlan        `json:"plan"`
-	ExtraFields map[string]ConfigGetResponseAgent `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Build       respjson.Field
-		General     respjson.Field
-		Plan        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+type ConfigAgent struct {
+	Build       AgentConfig            `json:"build"`
+	General     AgentConfig            `json:"general"`
+	Plan        AgentConfig            `json:"plan"`
+	ExtraFields map[string]AgentConfig `json:"-,extras"`
+	JSON        configAgentJSON        `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgent) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgent) UnmarshalJSON(data []byte) error {
+// configAgentJSON contains the JSON metadata for the struct [ConfigAgent]
+type configAgentJSON struct {
+	Build       apijson.Field
+	General     apijson.Field
+	Plan        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigAgent) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentBuild struct {
-	// Description of when to use the agent
-	Description string `json:"description"`
-	Disable     bool   `json:"disable"`
-	// Any of "subagent", "primary", "all".
-	Mode        ConfigGetResponseAgentBuildMode       `json:"mode"`
-	Model       string                                `json:"model"`
-	Permission  ConfigGetResponseAgentBuildPermission `json:"permission"`
-	Prompt      string                                `json:"prompt"`
-	Temperature float64                               `json:"temperature"`
-	Tools       map[string]bool                       `json:"tools"`
-	TopP        float64                               `json:"top_p"`
-	ExtraFields map[string]any                        `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Disable     respjson.Field
-		Mode        respjson.Field
-		Model       respjson.Field
-		Permission  respjson.Field
-		Prompt      respjson.Field
-		Temperature respjson.Field
-		Tools       respjson.Field
-		TopP        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configAgentJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentBuild) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentBuild) UnmarshalJSON(data []byte) error {
+type ConfigCommand struct {
+	Template    string            `json:"template,required"`
+	Agent       string            `json:"agent"`
+	Description string            `json:"description"`
+	Model       string            `json:"model"`
+	JSON        configCommandJSON `json:"-"`
+}
+
+// configCommandJSON contains the JSON metadata for the struct [ConfigCommand]
+type configCommandJSON struct {
+	Template    apijson.Field
+	Agent       apijson.Field
+	Description apijson.Field
+	Model       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigCommand) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentBuildMode string
-
-const (
-	ConfigGetResponseAgentBuildModeSubagent ConfigGetResponseAgentBuildMode = "subagent"
-	ConfigGetResponseAgentBuildModePrimary  ConfigGetResponseAgentBuildMode = "primary"
-	ConfigGetResponseAgentBuildModeAll      ConfigGetResponseAgentBuildMode = "all"
-)
-
-type ConfigGetResponseAgentBuildPermission struct {
-	Bash ConfigGetResponseAgentBuildPermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponseAgentBuildPermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponseAgentBuildPermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configCommandJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentBuildPermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentBuildPermission) UnmarshalJSON(data []byte) error {
+type ConfigExperimental struct {
+	Hook ConfigExperimentalHook `json:"hook"`
+	JSON configExperimentalJSON `json:"-"`
+}
+
+// configExperimentalJSON contains the JSON metadata for the struct
+// [ConfigExperimental]
+type configExperimentalJSON struct {
+	Hook        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigExperimental) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentBuildPermissionBashString string
-
-const (
-	ConfigGetResponseAgentBuildPermissionBashStringAsk   ConfigGetResponseAgentBuildPermissionBashString = "ask"
-	ConfigGetResponseAgentBuildPermissionBashStringAllow ConfigGetResponseAgentBuildPermissionBashString = "allow"
-	ConfigGetResponseAgentBuildPermissionBashStringDeny  ConfigGetResponseAgentBuildPermissionBashString = "deny"
-)
-
-type ConfigGetResponseAgentBuildPermissionBashMapItem string
-
-const (
-	ConfigGetResponseAgentBuildPermissionBashMapItemAsk   ConfigGetResponseAgentBuildPermissionBashMapItem = "ask"
-	ConfigGetResponseAgentBuildPermissionBashMapItemAllow ConfigGetResponseAgentBuildPermissionBashMapItem = "allow"
-	ConfigGetResponseAgentBuildPermissionBashMapItemDeny  ConfigGetResponseAgentBuildPermissionBashMapItem = "deny"
-)
-
-type ConfigGetResponseAgentBuildPermissionEdit string
-
-const (
-	ConfigGetResponseAgentBuildPermissionEditAsk   ConfigGetResponseAgentBuildPermissionEdit = "ask"
-	ConfigGetResponseAgentBuildPermissionEditAllow ConfigGetResponseAgentBuildPermissionEdit = "allow"
-	ConfigGetResponseAgentBuildPermissionEditDeny  ConfigGetResponseAgentBuildPermissionEdit = "deny"
-)
-
-type ConfigGetResponseAgentBuildPermissionWebfetch string
-
-const (
-	ConfigGetResponseAgentBuildPermissionWebfetchAsk   ConfigGetResponseAgentBuildPermissionWebfetch = "ask"
-	ConfigGetResponseAgentBuildPermissionWebfetchAllow ConfigGetResponseAgentBuildPermissionWebfetch = "allow"
-	ConfigGetResponseAgentBuildPermissionWebfetchDeny  ConfigGetResponseAgentBuildPermissionWebfetch = "deny"
-)
-
-type ConfigGetResponseAgentGeneral struct {
-	// Description of when to use the agent
-	Description string `json:"description"`
-	Disable     bool   `json:"disable"`
-	// Any of "subagent", "primary", "all".
-	Mode        ConfigGetResponseAgentGeneralMode       `json:"mode"`
-	Model       string                                  `json:"model"`
-	Permission  ConfigGetResponseAgentGeneralPermission `json:"permission"`
-	Prompt      string                                  `json:"prompt"`
-	Temperature float64                                 `json:"temperature"`
-	Tools       map[string]bool                         `json:"tools"`
-	TopP        float64                                 `json:"top_p"`
-	ExtraFields map[string]any                          `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Disable     respjson.Field
-		Mode        respjson.Field
-		Model       respjson.Field
-		Permission  respjson.Field
-		Prompt      respjson.Field
-		Temperature respjson.Field
-		Tools       respjson.Field
-		TopP        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configExperimentalJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentGeneral) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentGeneral) UnmarshalJSON(data []byte) error {
+type ConfigExperimentalHook struct {
+	FileEdited       map[string][]ConfigExperimentalHookFileEdited `json:"file_edited"`
+	SessionCompleted []ConfigExperimentalHookSessionCompleted      `json:"session_completed"`
+	JSON             configExperimentalHookJSON                    `json:"-"`
+}
+
+// configExperimentalHookJSON contains the JSON metadata for the struct
+// [ConfigExperimentalHook]
+type configExperimentalHookJSON struct {
+	FileEdited       apijson.Field
+	SessionCompleted apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *ConfigExperimentalHook) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentGeneralMode string
-
-const (
-	ConfigGetResponseAgentGeneralModeSubagent ConfigGetResponseAgentGeneralMode = "subagent"
-	ConfigGetResponseAgentGeneralModePrimary  ConfigGetResponseAgentGeneralMode = "primary"
-	ConfigGetResponseAgentGeneralModeAll      ConfigGetResponseAgentGeneralMode = "all"
-)
-
-type ConfigGetResponseAgentGeneralPermission struct {
-	Bash ConfigGetResponseAgentGeneralPermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponseAgentGeneralPermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponseAgentGeneralPermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configExperimentalHookJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentGeneralPermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentGeneralPermission) UnmarshalJSON(data []byte) error {
+type ConfigExperimentalHookFileEdited struct {
+	Command     []string                             `json:"command,required"`
+	Environment map[string]string                    `json:"environment"`
+	JSON        configExperimentalHookFileEditedJSON `json:"-"`
+}
+
+// configExperimentalHookFileEditedJSON contains the JSON metadata for the struct
+// [ConfigExperimentalHookFileEdited]
+type configExperimentalHookFileEditedJSON struct {
+	Command     apijson.Field
+	Environment apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigExperimentalHookFileEdited) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentGeneralPermissionBashString string
-
-const (
-	ConfigGetResponseAgentGeneralPermissionBashStringAsk   ConfigGetResponseAgentGeneralPermissionBashString = "ask"
-	ConfigGetResponseAgentGeneralPermissionBashStringAllow ConfigGetResponseAgentGeneralPermissionBashString = "allow"
-	ConfigGetResponseAgentGeneralPermissionBashStringDeny  ConfigGetResponseAgentGeneralPermissionBashString = "deny"
-)
-
-type ConfigGetResponseAgentGeneralPermissionBashMapItem string
-
-const (
-	ConfigGetResponseAgentGeneralPermissionBashMapItemAsk   ConfigGetResponseAgentGeneralPermissionBashMapItem = "ask"
-	ConfigGetResponseAgentGeneralPermissionBashMapItemAllow ConfigGetResponseAgentGeneralPermissionBashMapItem = "allow"
-	ConfigGetResponseAgentGeneralPermissionBashMapItemDeny  ConfigGetResponseAgentGeneralPermissionBashMapItem = "deny"
-)
-
-type ConfigGetResponseAgentGeneralPermissionEdit string
-
-const (
-	ConfigGetResponseAgentGeneralPermissionEditAsk   ConfigGetResponseAgentGeneralPermissionEdit = "ask"
-	ConfigGetResponseAgentGeneralPermissionEditAllow ConfigGetResponseAgentGeneralPermissionEdit = "allow"
-	ConfigGetResponseAgentGeneralPermissionEditDeny  ConfigGetResponseAgentGeneralPermissionEdit = "deny"
-)
-
-type ConfigGetResponseAgentGeneralPermissionWebfetch string
-
-const (
-	ConfigGetResponseAgentGeneralPermissionWebfetchAsk   ConfigGetResponseAgentGeneralPermissionWebfetch = "ask"
-	ConfigGetResponseAgentGeneralPermissionWebfetchAllow ConfigGetResponseAgentGeneralPermissionWebfetch = "allow"
-	ConfigGetResponseAgentGeneralPermissionWebfetchDeny  ConfigGetResponseAgentGeneralPermissionWebfetch = "deny"
-)
-
-type ConfigGetResponseAgentPlan struct {
-	// Description of when to use the agent
-	Description string `json:"description"`
-	Disable     bool   `json:"disable"`
-	// Any of "subagent", "primary", "all".
-	Mode        ConfigGetResponseAgentPlanMode       `json:"mode"`
-	Model       string                               `json:"model"`
-	Permission  ConfigGetResponseAgentPlanPermission `json:"permission"`
-	Prompt      string                               `json:"prompt"`
-	Temperature float64                              `json:"temperature"`
-	Tools       map[string]bool                      `json:"tools"`
-	TopP        float64                              `json:"top_p"`
-	ExtraFields map[string]any                       `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Disable     respjson.Field
-		Mode        respjson.Field
-		Model       respjson.Field
-		Permission  respjson.Field
-		Prompt      respjson.Field
-		Temperature respjson.Field
-		Tools       respjson.Field
-		TopP        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configExperimentalHookFileEditedJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentPlan) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentPlan) UnmarshalJSON(data []byte) error {
+type ConfigExperimentalHookSessionCompleted struct {
+	Command     []string                                   `json:"command,required"`
+	Environment map[string]string                          `json:"environment"`
+	JSON        configExperimentalHookSessionCompletedJSON `json:"-"`
+}
+
+// configExperimentalHookSessionCompletedJSON contains the JSON metadata for the
+// struct [ConfigExperimentalHookSessionCompleted]
+type configExperimentalHookSessionCompletedJSON struct {
+	Command     apijson.Field
+	Environment apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigExperimentalHookSessionCompleted) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentPlanMode string
+func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigFormatter struct {
+	Command     []string            `json:"command"`
+	Disabled    bool                `json:"disabled"`
+	Environment map[string]string   `json:"environment"`
+	Extensions  []string            `json:"extensions"`
+	JSON        configFormatterJSON `json:"-"`
+}
+
+// configFormatterJSON contains the JSON metadata for the struct [ConfigFormatter]
+type configFormatterJSON struct {
+	Command     apijson.Field
+	Disabled    apijson.Field
+	Environment apijson.Field
+	Extensions  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigFormatter) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configFormatterJSON) RawJSON() string {
+	return r.raw
+}
+
+// @deprecated Always uses stretch layout.
+type ConfigLayout string
 
 const (
-	ConfigGetResponseAgentPlanModeSubagent ConfigGetResponseAgentPlanMode = "subagent"
-	ConfigGetResponseAgentPlanModePrimary  ConfigGetResponseAgentPlanMode = "primary"
-	ConfigGetResponseAgentPlanModeAll      ConfigGetResponseAgentPlanMode = "all"
+	ConfigLayoutAuto    ConfigLayout = "auto"
+	ConfigLayoutStretch ConfigLayout = "stretch"
 )
 
-type ConfigGetResponseAgentPlanPermission struct {
-	Bash ConfigGetResponseAgentPlanPermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponseAgentPlanPermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponseAgentPlanPermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r ConfigLayout) IsKnown() bool {
+	switch r {
+	case ConfigLayoutAuto, ConfigLayoutStretch:
+		return true
+	}
+	return false
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseAgentPlanPermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseAgentPlanPermission) UnmarshalJSON(data []byte) error {
+type ConfigLsp struct {
+	// This field can have the runtime type of [[]string].
+	Command  interface{} `json:"command"`
+	Disabled bool        `json:"disabled"`
+	// This field can have the runtime type of [map[string]string].
+	Env interface{} `json:"env"`
+	// This field can have the runtime type of [[]string].
+	Extensions interface{} `json:"extensions"`
+	// This field can have the runtime type of [map[string]interface{}].
+	Initialization interface{}   `json:"initialization"`
+	JSON           configLspJSON `json:"-"`
+	union          ConfigLspUnion
+}
+
+// configLspJSON contains the JSON metadata for the struct [ConfigLsp]
+type configLspJSON struct {
+	Command        apijson.Field
+	Disabled       apijson.Field
+	Env            apijson.Field
+	Extensions     apijson.Field
+	Initialization apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r configLspJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConfigLsp) UnmarshalJSON(data []byte) (err error) {
+	*r = ConfigLsp{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConfigLspUnion] interface which you can cast to the specific
+// types for more type safety.
+//
+// Possible runtime types of the union are [ConfigLspDisabled], [ConfigLspObject].
+func (r ConfigLsp) AsUnion() ConfigLspUnion {
+	return r.union
+}
+
+// Union satisfied by [ConfigLspDisabled] or [ConfigLspObject].
+type ConfigLspUnion interface {
+	implementsConfigLsp()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigLspUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigLspDisabled{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigLspObject{}),
+		},
+	)
+}
+
+type ConfigLspDisabled struct {
+	Disabled ConfigLspDisabledDisabled `json:"disabled,required"`
+	JSON     configLspDisabledJSON     `json:"-"`
+}
+
+// configLspDisabledJSON contains the JSON metadata for the struct
+// [ConfigLspDisabled]
+type configLspDisabledJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigLspDisabled) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseAgentPlanPermissionBashString string
+func (r configLspDisabledJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConfigLspDisabled) implementsConfigLsp() {}
+
+type ConfigLspDisabledDisabled bool
 
 const (
-	ConfigGetResponseAgentPlanPermissionBashStringAsk   ConfigGetResponseAgentPlanPermissionBashString = "ask"
-	ConfigGetResponseAgentPlanPermissionBashStringAllow ConfigGetResponseAgentPlanPermissionBashString = "allow"
-	ConfigGetResponseAgentPlanPermissionBashStringDeny  ConfigGetResponseAgentPlanPermissionBashString = "deny"
+	ConfigLspDisabledDisabledTrue ConfigLspDisabledDisabled = true
 )
 
-type ConfigGetResponseAgentPlanPermissionBashMapItem string
+func (r ConfigLspDisabledDisabled) IsKnown() bool {
+	switch r {
+	case ConfigLspDisabledDisabledTrue:
+		return true
+	}
+	return false
+}
+
+type ConfigLspObject struct {
+	Command        []string               `json:"command,required"`
+	Disabled       bool                   `json:"disabled"`
+	Env            map[string]string      `json:"env"`
+	Extensions     []string               `json:"extensions"`
+	Initialization map[string]interface{} `json:"initialization"`
+	JSON           configLspObjectJSON    `json:"-"`
+}
+
+// configLspObjectJSON contains the JSON metadata for the struct [ConfigLspObject]
+type configLspObjectJSON struct {
+	Command        apijson.Field
+	Disabled       apijson.Field
+	Env            apijson.Field
+	Extensions     apijson.Field
+	Initialization apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *ConfigLspObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configLspObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConfigLspObject) implementsConfigLsp() {}
+
+type ConfigMcp struct {
+	// Type of MCP server connection
+	Type ConfigMcpType `json:"type,required"`
+	// This field can have the runtime type of [[]string].
+	Command interface{} `json:"command"`
+	// Enable or disable the MCP server on startup
+	Enabled bool `json:"enabled"`
+	// This field can have the runtime type of [map[string]string].
+	Environment interface{} `json:"environment"`
+	// This field can have the runtime type of [map[string]string].
+	Headers interface{} `json:"headers"`
+	// URL of the remote MCP server
+	URL   string        `json:"url"`
+	JSON  configMcpJSON `json:"-"`
+	union ConfigMcpUnion
+}
+
+// configMcpJSON contains the JSON metadata for the struct [ConfigMcp]
+type configMcpJSON struct {
+	Type        apijson.Field
+	Command     apijson.Field
+	Enabled     apijson.Field
+	Environment apijson.Field
+	Headers     apijson.Field
+	URL         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r configMcpJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConfigMcp) UnmarshalJSON(data []byte) (err error) {
+	*r = ConfigMcp{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConfigMcpUnion] interface which you can cast to the specific
+// types for more type safety.
+//
+// Possible runtime types of the union are [McpLocalConfig], [McpRemoteConfig].
+func (r ConfigMcp) AsUnion() ConfigMcpUnion {
+	return r.union
+}
+
+// Union satisfied by [McpLocalConfig] or [McpRemoteConfig].
+type ConfigMcpUnion interface {
+	implementsConfigMcp()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigMcpUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(McpLocalConfig{}),
+			DiscriminatorValue: "local",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(McpRemoteConfig{}),
+			DiscriminatorValue: "remote",
+		},
+	)
+}
+
+// Type of MCP server connection
+type ConfigMcpType string
 
 const (
-	ConfigGetResponseAgentPlanPermissionBashMapItemAsk   ConfigGetResponseAgentPlanPermissionBashMapItem = "ask"
-	ConfigGetResponseAgentPlanPermissionBashMapItemAllow ConfigGetResponseAgentPlanPermissionBashMapItem = "allow"
-	ConfigGetResponseAgentPlanPermissionBashMapItemDeny  ConfigGetResponseAgentPlanPermissionBashMapItem = "deny"
+	ConfigMcpTypeLocal  ConfigMcpType = "local"
+	ConfigMcpTypeRemote ConfigMcpType = "remote"
 )
 
-type ConfigGetResponseAgentPlanPermissionEdit string
+func (r ConfigMcpType) IsKnown() bool {
+	switch r {
+	case ConfigMcpTypeLocal, ConfigMcpTypeRemote:
+		return true
+	}
+	return false
+}
+
+// @deprecated Use `agent` field instead.
+type ConfigMode struct {
+	Build       AgentConfig            `json:"build"`
+	Plan        AgentConfig            `json:"plan"`
+	ExtraFields map[string]AgentConfig `json:"-,extras"`
+	JSON        configModeJSON         `json:"-"`
+}
+
+// configModeJSON contains the JSON metadata for the struct [ConfigMode]
+type configModeJSON struct {
+	Build       apijson.Field
+	Plan        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configModeJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigPermission struct {
+	Bash     ConfigPermissionBashUnion `json:"bash"`
+	Edit     ConfigPermissionEdit      `json:"edit"`
+	Webfetch ConfigPermissionWebfetch  `json:"webfetch"`
+	JSON     configPermissionJSON      `json:"-"`
+}
+
+// configPermissionJSON contains the JSON metadata for the struct
+// [ConfigPermission]
+type configPermissionJSON struct {
+	Bash        apijson.Field
+	Edit        apijson.Field
+	Webfetch    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigPermission) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configPermissionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [ConfigPermissionBashString] or [ConfigPermissionBashMap].
+type ConfigPermissionBashUnion interface {
+	implementsConfigPermissionBashUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConfigPermissionBashUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(ConfigPermissionBashString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConfigPermissionBashMap{}),
+		},
+	)
+}
+
+type ConfigPermissionBashString string
 
 const (
-	ConfigGetResponseAgentPlanPermissionEditAsk   ConfigGetResponseAgentPlanPermissionEdit = "ask"
-	ConfigGetResponseAgentPlanPermissionEditAllow ConfigGetResponseAgentPlanPermissionEdit = "allow"
-	ConfigGetResponseAgentPlanPermissionEditDeny  ConfigGetResponseAgentPlanPermissionEdit = "deny"
+	ConfigPermissionBashStringAsk   ConfigPermissionBashString = "ask"
+	ConfigPermissionBashStringAllow ConfigPermissionBashString = "allow"
+	ConfigPermissionBashStringDeny  ConfigPermissionBashString = "deny"
 )
 
-type ConfigGetResponseAgentPlanPermissionWebfetch string
+func (r ConfigPermissionBashString) IsKnown() bool {
+	switch r {
+	case ConfigPermissionBashStringAsk, ConfigPermissionBashStringAllow, ConfigPermissionBashStringDeny:
+		return true
+	}
+	return false
+}
+
+func (r ConfigPermissionBashString) implementsConfigPermissionBashUnion() {}
+
+type ConfigPermissionBashMap map[string]ConfigPermissionBashMapItem
+
+func (r ConfigPermissionBashMap) implementsConfigPermissionBashUnion() {}
+
+type ConfigPermissionBashMapItem string
 
 const (
-	ConfigGetResponseAgentPlanPermissionWebfetchAsk   ConfigGetResponseAgentPlanPermissionWebfetch = "ask"
-	ConfigGetResponseAgentPlanPermissionWebfetchAllow ConfigGetResponseAgentPlanPermissionWebfetch = "allow"
-	ConfigGetResponseAgentPlanPermissionWebfetchDeny  ConfigGetResponseAgentPlanPermissionWebfetch = "deny"
+	ConfigPermissionBashMapAsk   ConfigPermissionBashMapItem = "ask"
+	ConfigPermissionBashMapAllow ConfigPermissionBashMapItem = "allow"
+	ConfigPermissionBashMapDeny  ConfigPermissionBashMapItem = "deny"
 )
 
-type ConfigGetResponseCommand struct {
-	Template    string `json:"template,required"`
-	Agent       string `json:"agent"`
-	Description string `json:"description"`
-	Model       string `json:"model"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Template    respjson.Field
-		Agent       respjson.Field
-		Description respjson.Field
-		Model       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r ConfigPermissionBashMapItem) IsKnown() bool {
+	switch r {
+	case ConfigPermissionBashMapAsk, ConfigPermissionBashMapAllow, ConfigPermissionBashMapDeny:
+		return true
+	}
+	return false
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseCommand) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseCommand) UnmarshalJSON(data []byte) error {
+type ConfigPermissionEdit string
+
+const (
+	ConfigPermissionEditAsk   ConfigPermissionEdit = "ask"
+	ConfigPermissionEditAllow ConfigPermissionEdit = "allow"
+	ConfigPermissionEditDeny  ConfigPermissionEdit = "deny"
+)
+
+func (r ConfigPermissionEdit) IsKnown() bool {
+	switch r {
+	case ConfigPermissionEditAsk, ConfigPermissionEditAllow, ConfigPermissionEditDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigPermissionWebfetch string
+
+const (
+	ConfigPermissionWebfetchAsk   ConfigPermissionWebfetch = "ask"
+	ConfigPermissionWebfetchAllow ConfigPermissionWebfetch = "allow"
+	ConfigPermissionWebfetchDeny  ConfigPermissionWebfetch = "deny"
+)
+
+func (r ConfigPermissionWebfetch) IsKnown() bool {
+	switch r {
+	case ConfigPermissionWebfetchAsk, ConfigPermissionWebfetchAllow, ConfigPermissionWebfetchDeny:
+		return true
+	}
+	return false
+}
+
+type ConfigProvider struct {
+	ID      string                         `json:"id"`
+	API     string                         `json:"api"`
+	Env     []string                       `json:"env"`
+	Models  map[string]ConfigProviderModel `json:"models"`
+	Name    string                         `json:"name"`
+	Npm     string                         `json:"npm"`
+	Options ConfigProviderOptions          `json:"options"`
+	JSON    configProviderJSON             `json:"-"`
+}
+
+// configProviderJSON contains the JSON metadata for the struct [ConfigProvider]
+type configProviderJSON struct {
+	ID          apijson.Field
+	API         apijson.Field
+	Env         apijson.Field
+	Models      apijson.Field
+	Name        apijson.Field
+	Npm         apijson.Field
+	Options     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProvider) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseExperimental struct {
-	Hook ConfigGetResponseExperimentalHook `json:"hook"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Hook        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configProviderJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseExperimental) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseExperimental) UnmarshalJSON(data []byte) error {
+type ConfigProviderModel struct {
+	ID          string                    `json:"id"`
+	Attachment  bool                      `json:"attachment"`
+	Cost        ConfigProviderModelsCost  `json:"cost"`
+	Limit       ConfigProviderModelsLimit `json:"limit"`
+	Name        string                    `json:"name"`
+	Options     map[string]interface{}    `json:"options"`
+	Reasoning   bool                      `json:"reasoning"`
+	ReleaseDate string                    `json:"release_date"`
+	Temperature bool                      `json:"temperature"`
+	ToolCall    bool                      `json:"tool_call"`
+	JSON        configProviderModelJSON   `json:"-"`
+}
+
+// configProviderModelJSON contains the JSON metadata for the struct
+// [ConfigProviderModel]
+type configProviderModelJSON struct {
+	ID          apijson.Field
+	Attachment  apijson.Field
+	Cost        apijson.Field
+	Limit       apijson.Field
+	Name        apijson.Field
+	Options     apijson.Field
+	Reasoning   apijson.Field
+	ReleaseDate apijson.Field
+	Temperature apijson.Field
+	ToolCall    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProviderModel) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseExperimentalHook struct {
-	FileEdited       map[string][]ConfigGetResponseExperimentalHookFileEdited `json:"file_edited"`
-	SessionCompleted []ConfigGetResponseExperimentalHookSessionCompleted      `json:"session_completed"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileEdited       respjson.Field
-		SessionCompleted respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
-	} `json:"-"`
+func (r configProviderModelJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseExperimentalHook) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseExperimentalHook) UnmarshalJSON(data []byte) error {
+type ConfigProviderModelsCost struct {
+	Input      float64                      `json:"input,required"`
+	Output     float64                      `json:"output,required"`
+	CacheRead  float64                      `json:"cache_read"`
+	CacheWrite float64                      `json:"cache_write"`
+	JSON       configProviderModelsCostJSON `json:"-"`
+}
+
+// configProviderModelsCostJSON contains the JSON metadata for the struct
+// [ConfigProviderModelsCost]
+type configProviderModelsCostJSON struct {
+	Input       apijson.Field
+	Output      apijson.Field
+	CacheRead   apijson.Field
+	CacheWrite  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProviderModelsCost) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseExperimentalHookFileEdited struct {
-	Command     []string          `json:"command,required"`
-	Environment map[string]string `json:"environment"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Command     respjson.Field
-		Environment respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configProviderModelsCostJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseExperimentalHookFileEdited) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseExperimentalHookFileEdited) UnmarshalJSON(data []byte) error {
+type ConfigProviderModelsLimit struct {
+	Context float64                       `json:"context,required"`
+	Output  float64                       `json:"output,required"`
+	JSON    configProviderModelsLimitJSON `json:"-"`
+}
+
+// configProviderModelsLimitJSON contains the JSON metadata for the struct
+// [ConfigProviderModelsLimit]
+type configProviderModelsLimitJSON struct {
+	Context     apijson.Field
+	Output      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProviderModelsLimit) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseExperimentalHookSessionCompleted struct {
-	Command     []string          `json:"command,required"`
-	Environment map[string]string `json:"environment"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Command     respjson.Field
-		Environment respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configProviderModelsLimitJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseExperimentalHookSessionCompleted) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseExperimentalHookSessionCompleted) UnmarshalJSON(data []byte) error {
+type ConfigProviderOptions struct {
+	APIKey      string                    `json:"apiKey"`
+	BaseURL     string                    `json:"baseURL"`
+	ExtraFields map[string]interface{}    `json:"-,extras"`
+	JSON        configProviderOptionsJSON `json:"-"`
+}
+
+// configProviderOptionsJSON contains the JSON metadata for the struct
+// [ConfigProviderOptions]
+type configProviderOptionsJSON struct {
+	APIKey      apijson.Field
+	BaseURL     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProviderOptions) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseFormatter struct {
-	Command     []string          `json:"command"`
-	Disabled    bool              `json:"disabled"`
-	Environment map[string]string `json:"environment"`
-	Extensions  []string          `json:"extensions"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Command     respjson.Field
-		Disabled    respjson.Field
-		Environment respjson.Field
-		Extensions  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r configProviderOptionsJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseFormatter) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseFormatter) UnmarshalJSON(data []byte) error {
+// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
+// enables automatic sharing, 'disabled' disables all sharing
+type ConfigShare string
+
+const (
+	ConfigShareManual   ConfigShare = "manual"
+	ConfigShareAuto     ConfigShare = "auto"
+	ConfigShareDisabled ConfigShare = "disabled"
+)
+
+func (r ConfigShare) IsKnown() bool {
+	switch r {
+	case ConfigShareManual, ConfigShareAuto, ConfigShareDisabled:
+		return true
+	}
+	return false
+}
+
+// TUI specific settings
+type ConfigTui struct {
+	// TUI scroll speed
+	ScrollSpeed float64       `json:"scroll_speed,required"`
+	JSON        configTuiJSON `json:"-"`
+}
+
+// configTuiJSON contains the JSON metadata for the struct [ConfigTui]
+type configTuiJSON struct {
+	ScrollSpeed apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigTui) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Custom keybind configurations
-type ConfigGetResponseKeybinds struct {
+func (r configTuiJSON) RawJSON() string {
+	return r.raw
+}
+
+type KeybindsConfig struct {
 	// Next agent
 	AgentCycle string `json:"agent_cycle,required"`
 	// Previous agent
@@ -664,815 +1126,163 @@ type ConfigGetResponseKeybinds struct {
 	// Toggle thinking blocks
 	ThinkingBlocks string `json:"thinking_blocks,required"`
 	// Toggle tool details
-	ToolDetails string `json:"tool_details,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AgentCycle               respjson.Field
-		AgentCycleReverse        respjson.Field
-		AgentList                respjson.Field
-		AppExit                  respjson.Field
-		AppHelp                  respjson.Field
-		EditorOpen               respjson.Field
-		FileClose                respjson.Field
-		FileDiffToggle           respjson.Field
-		FileList                 respjson.Field
-		FileSearch               respjson.Field
-		InputClear               respjson.Field
-		InputNewline             respjson.Field
-		InputPaste               respjson.Field
-		InputSubmit              respjson.Field
-		Leader                   respjson.Field
-		MessagesCopy             respjson.Field
-		MessagesFirst            respjson.Field
-		MessagesHalfPageDown     respjson.Field
-		MessagesHalfPageUp       respjson.Field
-		MessagesLast             respjson.Field
-		MessagesLayoutToggle     respjson.Field
-		MessagesNext             respjson.Field
-		MessagesPageDown         respjson.Field
-		MessagesPageUp           respjson.Field
-		MessagesPrevious         respjson.Field
-		MessagesRedo             respjson.Field
-		MessagesRevert           respjson.Field
-		MessagesUndo             respjson.Field
-		ModelCycleRecent         respjson.Field
-		ModelCycleRecentReverse  respjson.Field
-		ModelList                respjson.Field
-		ProjectInit              respjson.Field
-		SessionChildCycle        respjson.Field
-		SessionChildCycleReverse respjson.Field
-		SessionCompact           respjson.Field
-		SessionExport            respjson.Field
-		SessionInterrupt         respjson.Field
-		SessionList              respjson.Field
-		SessionNew               respjson.Field
-		SessionShare             respjson.Field
-		SessionTimeline          respjson.Field
-		SessionUnshare           respjson.Field
-		SwitchAgent              respjson.Field
-		SwitchAgentReverse       respjson.Field
-		SwitchMode               respjson.Field
-		SwitchModeReverse        respjson.Field
-		ThemeList                respjson.Field
-		ThinkingBlocks           respjson.Field
-		ToolDetails              respjson.Field
-		ExtraFields              map[string]respjson.Field
-		raw                      string
-	} `json:"-"`
+	ToolDetails string             `json:"tool_details,required"`
+	JSON        keybindsConfigJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseKeybinds) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseKeybinds) UnmarshalJSON(data []byte) error {
+// keybindsConfigJSON contains the JSON metadata for the struct [KeybindsConfig]
+type keybindsConfigJSON struct {
+	AgentCycle               apijson.Field
+	AgentCycleReverse        apijson.Field
+	AgentList                apijson.Field
+	AppExit                  apijson.Field
+	AppHelp                  apijson.Field
+	EditorOpen               apijson.Field
+	FileClose                apijson.Field
+	FileDiffToggle           apijson.Field
+	FileList                 apijson.Field
+	FileSearch               apijson.Field
+	InputClear               apijson.Field
+	InputNewline             apijson.Field
+	InputPaste               apijson.Field
+	InputSubmit              apijson.Field
+	Leader                   apijson.Field
+	MessagesCopy             apijson.Field
+	MessagesFirst            apijson.Field
+	MessagesHalfPageDown     apijson.Field
+	MessagesHalfPageUp       apijson.Field
+	MessagesLast             apijson.Field
+	MessagesLayoutToggle     apijson.Field
+	MessagesNext             apijson.Field
+	MessagesPageDown         apijson.Field
+	MessagesPageUp           apijson.Field
+	MessagesPrevious         apijson.Field
+	MessagesRedo             apijson.Field
+	MessagesRevert           apijson.Field
+	MessagesUndo             apijson.Field
+	ModelCycleRecent         apijson.Field
+	ModelCycleRecentReverse  apijson.Field
+	ModelList                apijson.Field
+	ProjectInit              apijson.Field
+	SessionChildCycle        apijson.Field
+	SessionChildCycleReverse apijson.Field
+	SessionCompact           apijson.Field
+	SessionExport            apijson.Field
+	SessionInterrupt         apijson.Field
+	SessionList              apijson.Field
+	SessionNew               apijson.Field
+	SessionShare             apijson.Field
+	SessionTimeline          apijson.Field
+	SessionUnshare           apijson.Field
+	SwitchAgent              apijson.Field
+	SwitchAgentReverse       apijson.Field
+	SwitchMode               apijson.Field
+	SwitchModeReverse        apijson.Field
+	ThemeList                apijson.Field
+	ThinkingBlocks           apijson.Field
+	ToolDetails              apijson.Field
+	raw                      string
+	ExtraFields              map[string]apijson.Field
+}
+
+func (r *KeybindsConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// @deprecated Always uses stretch layout.
-type ConfigGetResponseLayout string
-
-const (
-	ConfigGetResponseLayoutAuto    ConfigGetResponseLayout = "auto"
-	ConfigGetResponseLayoutStretch ConfigGetResponseLayout = "stretch"
-)
-
-// ConfigGetResponseLspUnion contains all possible properties and values from
-// [ConfigGetResponseLspDisabled], [ConfigGetResponseLspObject].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type ConfigGetResponseLspUnion struct {
-	Disabled bool `json:"disabled"`
-	// This field is from variant [ConfigGetResponseLspObject].
-	Command []string `json:"command"`
-	// This field is from variant [ConfigGetResponseLspObject].
-	Env map[string]string `json:"env"`
-	// This field is from variant [ConfigGetResponseLspObject].
-	Extensions []string `json:"extensions"`
-	// This field is from variant [ConfigGetResponseLspObject].
-	Initialization map[string]any `json:"initialization"`
-	JSON           struct {
-		Disabled       respjson.Field
-		Command        respjson.Field
-		Env            respjson.Field
-		Extensions     respjson.Field
-		Initialization respjson.Field
-		raw            string
-	} `json:"-"`
+func (r keybindsConfigJSON) RawJSON() string {
+	return r.raw
 }
 
-func (u ConfigGetResponseLspUnion) AsConfigGetResponseLspDisabled() (v ConfigGetResponseLspDisabled) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConfigGetResponseLspUnion) AsConfigGetResponseLspObject() (v ConfigGetResponseLspObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u ConfigGetResponseLspUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *ConfigGetResponseLspUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseLspDisabled struct {
-	Disabled bool `json:"disabled,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Disabled    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseLspDisabled) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseLspDisabled) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseLspObject struct {
-	Command        []string          `json:"command,required"`
-	Disabled       bool              `json:"disabled"`
-	Env            map[string]string `json:"env"`
-	Extensions     []string          `json:"extensions"`
-	Initialization map[string]any    `json:"initialization"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Command        respjson.Field
-		Disabled       respjson.Field
-		Env            respjson.Field
-		Extensions     respjson.Field
-		Initialization respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseLspObject) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseLspObject) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ConfigGetResponseMcpUnion contains all possible properties and values from
-// [ConfigGetResponseMcpLocal], [ConfigGetResponseMcpRemote].
-//
-// Use the [ConfigGetResponseMcpUnion.AsAny] method to switch on the variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type ConfigGetResponseMcpUnion struct {
-	// This field is from variant [ConfigGetResponseMcpLocal].
-	Command []string `json:"command"`
-	// Any of "local", "remote".
-	Type    string `json:"type"`
-	Enabled bool   `json:"enabled"`
-	// This field is from variant [ConfigGetResponseMcpLocal].
-	Environment map[string]string `json:"environment"`
-	// This field is from variant [ConfigGetResponseMcpRemote].
-	URL string `json:"url"`
-	// This field is from variant [ConfigGetResponseMcpRemote].
-	Headers map[string]string `json:"headers"`
-	JSON    struct {
-		Command     respjson.Field
-		Type        respjson.Field
-		Enabled     respjson.Field
-		Environment respjson.Field
-		URL         respjson.Field
-		Headers     respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// anyConfigGetResponseMcp is implemented by each variant of
-// [ConfigGetResponseMcpUnion] to add type safety for the return type of
-// [ConfigGetResponseMcpUnion.AsAny]
-type anyConfigGetResponseMcp interface {
-	implConfigGetResponseMcpUnion()
-}
-
-func (ConfigGetResponseMcpLocal) implConfigGetResponseMcpUnion()  {}
-func (ConfigGetResponseMcpRemote) implConfigGetResponseMcpUnion() {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := ConfigGetResponseMcpUnion.AsAny().(type) {
-//	case opencode.ConfigGetResponseMcpLocal:
-//	case opencode.ConfigGetResponseMcpRemote:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u ConfigGetResponseMcpUnion) AsAny() anyConfigGetResponseMcp {
-	switch u.Type {
-	case "local":
-		return u.AsLocal()
-	case "remote":
-		return u.AsRemote()
-	}
-	return nil
-}
-
-func (u ConfigGetResponseMcpUnion) AsLocal() (v ConfigGetResponseMcpLocal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConfigGetResponseMcpUnion) AsRemote() (v ConfigGetResponseMcpRemote) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u ConfigGetResponseMcpUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *ConfigGetResponseMcpUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseMcpLocal struct {
+type McpLocalConfig struct {
 	// Command and arguments to run the MCP server
 	Command []string `json:"command,required"`
 	// Type of MCP server connection
-	Type constant.Local `json:"type,required"`
+	Type McpLocalConfigType `json:"type,required"`
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
-	Environment map[string]string `json:"environment"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Command     respjson.Field
-		Type        respjson.Field
-		Enabled     respjson.Field
-		Environment respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Environment map[string]string  `json:"environment"`
+	JSON        mcpLocalConfigJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseMcpLocal) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseMcpLocal) UnmarshalJSON(data []byte) error {
+// mcpLocalConfigJSON contains the JSON metadata for the struct [McpLocalConfig]
+type mcpLocalConfigJSON struct {
+	Command     apijson.Field
+	Type        apijson.Field
+	Enabled     apijson.Field
+	Environment apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *McpLocalConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConfigGetResponseMcpRemote struct {
+func (r mcpLocalConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r McpLocalConfig) implementsConfigMcp() {}
+
+// Type of MCP server connection
+type McpLocalConfigType string
+
+const (
+	McpLocalConfigTypeLocal McpLocalConfigType = "local"
+)
+
+func (r McpLocalConfigType) IsKnown() bool {
+	switch r {
+	case McpLocalConfigTypeLocal:
+		return true
+	}
+	return false
+}
+
+type McpRemoteConfig struct {
 	// Type of MCP server connection
-	Type constant.Remote `json:"type,required"`
+	Type McpRemoteConfigType `json:"type,required"`
 	// URL of the remote MCP server
 	URL string `json:"url,required"`
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Headers to send with the request
-	Headers map[string]string `json:"headers"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Type        respjson.Field
-		URL         respjson.Field
-		Enabled     respjson.Field
-		Headers     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Headers map[string]string   `json:"headers"`
+	JSON    mcpRemoteConfigJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseMcpRemote) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseMcpRemote) UnmarshalJSON(data []byte) error {
+// mcpRemoteConfigJSON contains the JSON metadata for the struct [McpRemoteConfig]
+type mcpRemoteConfigJSON struct {
+	Type        apijson.Field
+	URL         apijson.Field
+	Enabled     apijson.Field
+	Headers     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *McpRemoteConfig) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// @deprecated Use `agent` field instead.
-type ConfigGetResponseMode struct {
-	Build       ConfigGetResponseModeBuild       `json:"build"`
-	Plan        ConfigGetResponseModePlan        `json:"plan"`
-	ExtraFields map[string]ConfigGetResponseMode `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Build       respjson.Field
-		Plan        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r mcpRemoteConfigJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseMode) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseMode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
+func (r McpRemoteConfig) implementsConfigMcp() {}
 
-type ConfigGetResponseModeBuild struct {
-	// Description of when to use the agent
-	Description string `json:"description"`
-	Disable     bool   `json:"disable"`
-	// Any of "subagent", "primary", "all".
-	Mode        ConfigGetResponseModeBuildMode       `json:"mode"`
-	Model       string                               `json:"model"`
-	Permission  ConfigGetResponseModeBuildPermission `json:"permission"`
-	Prompt      string                               `json:"prompt"`
-	Temperature float64                              `json:"temperature"`
-	Tools       map[string]bool                      `json:"tools"`
-	TopP        float64                              `json:"top_p"`
-	ExtraFields map[string]any                       `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Disable     respjson.Field
-		Mode        respjson.Field
-		Model       respjson.Field
-		Permission  respjson.Field
-		Prompt      respjson.Field
-		Temperature respjson.Field
-		Tools       respjson.Field
-		TopP        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseModeBuild) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseModeBuild) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseModeBuildMode string
+// Type of MCP server connection
+type McpRemoteConfigType string
 
 const (
-	ConfigGetResponseModeBuildModeSubagent ConfigGetResponseModeBuildMode = "subagent"
-	ConfigGetResponseModeBuildModePrimary  ConfigGetResponseModeBuildMode = "primary"
-	ConfigGetResponseModeBuildModeAll      ConfigGetResponseModeBuildMode = "all"
+	McpRemoteConfigTypeRemote McpRemoteConfigType = "remote"
 )
 
-type ConfigGetResponseModeBuildPermission struct {
-	Bash ConfigGetResponseModeBuildPermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponseModeBuildPermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponseModeBuildPermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseModeBuildPermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseModeBuildPermission) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseModeBuildPermissionBashString string
-
-const (
-	ConfigGetResponseModeBuildPermissionBashStringAsk   ConfigGetResponseModeBuildPermissionBashString = "ask"
-	ConfigGetResponseModeBuildPermissionBashStringAllow ConfigGetResponseModeBuildPermissionBashString = "allow"
-	ConfigGetResponseModeBuildPermissionBashStringDeny  ConfigGetResponseModeBuildPermissionBashString = "deny"
-)
-
-type ConfigGetResponseModeBuildPermissionBashMapItem string
-
-const (
-	ConfigGetResponseModeBuildPermissionBashMapItemAsk   ConfigGetResponseModeBuildPermissionBashMapItem = "ask"
-	ConfigGetResponseModeBuildPermissionBashMapItemAllow ConfigGetResponseModeBuildPermissionBashMapItem = "allow"
-	ConfigGetResponseModeBuildPermissionBashMapItemDeny  ConfigGetResponseModeBuildPermissionBashMapItem = "deny"
-)
-
-type ConfigGetResponseModeBuildPermissionEdit string
-
-const (
-	ConfigGetResponseModeBuildPermissionEditAsk   ConfigGetResponseModeBuildPermissionEdit = "ask"
-	ConfigGetResponseModeBuildPermissionEditAllow ConfigGetResponseModeBuildPermissionEdit = "allow"
-	ConfigGetResponseModeBuildPermissionEditDeny  ConfigGetResponseModeBuildPermissionEdit = "deny"
-)
-
-type ConfigGetResponseModeBuildPermissionWebfetch string
-
-const (
-	ConfigGetResponseModeBuildPermissionWebfetchAsk   ConfigGetResponseModeBuildPermissionWebfetch = "ask"
-	ConfigGetResponseModeBuildPermissionWebfetchAllow ConfigGetResponseModeBuildPermissionWebfetch = "allow"
-	ConfigGetResponseModeBuildPermissionWebfetchDeny  ConfigGetResponseModeBuildPermissionWebfetch = "deny"
-)
-
-type ConfigGetResponseModePlan struct {
-	// Description of when to use the agent
-	Description string `json:"description"`
-	Disable     bool   `json:"disable"`
-	// Any of "subagent", "primary", "all".
-	Mode        ConfigGetResponseModePlanMode       `json:"mode"`
-	Model       string                              `json:"model"`
-	Permission  ConfigGetResponseModePlanPermission `json:"permission"`
-	Prompt      string                              `json:"prompt"`
-	Temperature float64                             `json:"temperature"`
-	Tools       map[string]bool                     `json:"tools"`
-	TopP        float64                             `json:"top_p"`
-	ExtraFields map[string]any                      `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Disable     respjson.Field
-		Mode        respjson.Field
-		Model       respjson.Field
-		Permission  respjson.Field
-		Prompt      respjson.Field
-		Temperature respjson.Field
-		Tools       respjson.Field
-		TopP        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseModePlan) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseModePlan) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseModePlanMode string
-
-const (
-	ConfigGetResponseModePlanModeSubagent ConfigGetResponseModePlanMode = "subagent"
-	ConfigGetResponseModePlanModePrimary  ConfigGetResponseModePlanMode = "primary"
-	ConfigGetResponseModePlanModeAll      ConfigGetResponseModePlanMode = "all"
-)
-
-type ConfigGetResponseModePlanPermission struct {
-	Bash ConfigGetResponseModePlanPermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponseModePlanPermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponseModePlanPermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseModePlanPermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseModePlanPermission) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseModePlanPermissionBashString string
-
-const (
-	ConfigGetResponseModePlanPermissionBashStringAsk   ConfigGetResponseModePlanPermissionBashString = "ask"
-	ConfigGetResponseModePlanPermissionBashStringAllow ConfigGetResponseModePlanPermissionBashString = "allow"
-	ConfigGetResponseModePlanPermissionBashStringDeny  ConfigGetResponseModePlanPermissionBashString = "deny"
-)
-
-type ConfigGetResponseModePlanPermissionBashMapItem string
-
-const (
-	ConfigGetResponseModePlanPermissionBashMapItemAsk   ConfigGetResponseModePlanPermissionBashMapItem = "ask"
-	ConfigGetResponseModePlanPermissionBashMapItemAllow ConfigGetResponseModePlanPermissionBashMapItem = "allow"
-	ConfigGetResponseModePlanPermissionBashMapItemDeny  ConfigGetResponseModePlanPermissionBashMapItem = "deny"
-)
-
-type ConfigGetResponseModePlanPermissionEdit string
-
-const (
-	ConfigGetResponseModePlanPermissionEditAsk   ConfigGetResponseModePlanPermissionEdit = "ask"
-	ConfigGetResponseModePlanPermissionEditAllow ConfigGetResponseModePlanPermissionEdit = "allow"
-	ConfigGetResponseModePlanPermissionEditDeny  ConfigGetResponseModePlanPermissionEdit = "deny"
-)
-
-type ConfigGetResponseModePlanPermissionWebfetch string
-
-const (
-	ConfigGetResponseModePlanPermissionWebfetchAsk   ConfigGetResponseModePlanPermissionWebfetch = "ask"
-	ConfigGetResponseModePlanPermissionWebfetchAllow ConfigGetResponseModePlanPermissionWebfetch = "allow"
-	ConfigGetResponseModePlanPermissionWebfetchDeny  ConfigGetResponseModePlanPermissionWebfetch = "deny"
-)
-
-type ConfigGetResponsePermission struct {
-	Bash ConfigGetResponsePermissionBashUnion `json:"bash"`
-	// Any of "ask", "allow", "deny".
-	Edit ConfigGetResponsePermissionEdit `json:"edit"`
-	// Any of "ask", "allow", "deny".
-	Webfetch ConfigGetResponsePermissionWebfetch `json:"webfetch"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Bash        respjson.Field
-		Edit        respjson.Field
-		Webfetch    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponsePermission) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponsePermission) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponsePermissionBashString string
-
-const (
-	ConfigGetResponsePermissionBashStringAsk   ConfigGetResponsePermissionBashString = "ask"
-	ConfigGetResponsePermissionBashStringAllow ConfigGetResponsePermissionBashString = "allow"
-	ConfigGetResponsePermissionBashStringDeny  ConfigGetResponsePermissionBashString = "deny"
-)
-
-type ConfigGetResponsePermissionBashMapItem string
-
-const (
-	ConfigGetResponsePermissionBashMapItemAsk   ConfigGetResponsePermissionBashMapItem = "ask"
-	ConfigGetResponsePermissionBashMapItemAllow ConfigGetResponsePermissionBashMapItem = "allow"
-	ConfigGetResponsePermissionBashMapItemDeny  ConfigGetResponsePermissionBashMapItem = "deny"
-)
-
-type ConfigGetResponsePermissionEdit string
-
-const (
-	ConfigGetResponsePermissionEditAsk   ConfigGetResponsePermissionEdit = "ask"
-	ConfigGetResponsePermissionEditAllow ConfigGetResponsePermissionEdit = "allow"
-	ConfigGetResponsePermissionEditDeny  ConfigGetResponsePermissionEdit = "deny"
-)
-
-type ConfigGetResponsePermissionWebfetch string
-
-const (
-	ConfigGetResponsePermissionWebfetchAsk   ConfigGetResponsePermissionWebfetch = "ask"
-	ConfigGetResponsePermissionWebfetchAllow ConfigGetResponsePermissionWebfetch = "allow"
-	ConfigGetResponsePermissionWebfetchDeny  ConfigGetResponsePermissionWebfetch = "deny"
-)
-
-type ConfigGetResponseProvider struct {
-	ID      string                                    `json:"id"`
-	API     string                                    `json:"api"`
-	Env     []string                                  `json:"env"`
-	Models  map[string]ConfigGetResponseProviderModel `json:"models"`
-	Name    string                                    `json:"name"`
-	Npm     string                                    `json:"npm"`
-	Options ConfigGetResponseProviderOptions          `json:"options"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		API         respjson.Field
-		Env         respjson.Field
-		Models      respjson.Field
-		Name        respjson.Field
-		Npm         respjson.Field
-		Options     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseProvider) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseProvider) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseProviderModel struct {
-	ID          string                              `json:"id"`
-	Attachment  bool                                `json:"attachment"`
-	Cost        ConfigGetResponseProviderModelCost  `json:"cost"`
-	Limit       ConfigGetResponseProviderModelLimit `json:"limit"`
-	Name        string                              `json:"name"`
-	Options     map[string]any                      `json:"options"`
-	Reasoning   bool                                `json:"reasoning"`
-	ReleaseDate string                              `json:"release_date"`
-	Temperature bool                                `json:"temperature"`
-	ToolCall    bool                                `json:"tool_call"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Attachment  respjson.Field
-		Cost        respjson.Field
-		Limit       respjson.Field
-		Name        respjson.Field
-		Options     respjson.Field
-		Reasoning   respjson.Field
-		ReleaseDate respjson.Field
-		Temperature respjson.Field
-		ToolCall    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseProviderModel) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseProviderModel) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseProviderModelCost struct {
-	Input      float64 `json:"input,required"`
-	Output     float64 `json:"output,required"`
-	CacheRead  float64 `json:"cache_read"`
-	CacheWrite float64 `json:"cache_write"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Input       respjson.Field
-		Output      respjson.Field
-		CacheRead   respjson.Field
-		CacheWrite  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseProviderModelCost) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseProviderModelCost) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseProviderModelLimit struct {
-	Context float64 `json:"context,required"`
-	Output  float64 `json:"output,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Context     respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseProviderModelLimit) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseProviderModelLimit) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigGetResponseProviderOptions struct {
-	APIKey      string         `json:"apiKey"`
-	BaseURL     string         `json:"baseURL"`
-	ExtraFields map[string]any `json:",extras"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		APIKey      respjson.Field
-		BaseURL     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseProviderOptions) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseProviderOptions) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
-// enables automatic sharing, 'disabled' disables all sharing
-type ConfigGetResponseShare string
-
-const (
-	ConfigGetResponseShareManual   ConfigGetResponseShare = "manual"
-	ConfigGetResponseShareAuto     ConfigGetResponseShare = "auto"
-	ConfigGetResponseShareDisabled ConfigGetResponseShare = "disabled"
-)
-
-// TUI specific settings
-type ConfigGetResponseTui struct {
-	// TUI scroll speed
-	ScrollSpeed float64 `json:"scroll_speed,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ScrollSpeed respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigGetResponseTui) RawJSON() string { return r.JSON.raw }
-func (r *ConfigGetResponseTui) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigListProvidersResponse struct {
-	Default   map[string]string                     `json:"default,required"`
-	Providers []ConfigListProvidersResponseProvider `json:"providers,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Default     respjson.Field
-		Providers   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigListProvidersResponse) RawJSON() string { return r.JSON.raw }
-func (r *ConfigListProvidersResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigListProvidersResponseProvider struct {
-	ID     string                                              `json:"id,required"`
-	Env    []string                                            `json:"env,required"`
-	Models map[string]ConfigListProvidersResponseProviderModel `json:"models,required"`
-	Name   string                                              `json:"name,required"`
-	API    string                                              `json:"api"`
-	Npm    string                                              `json:"npm"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Env         respjson.Field
-		Models      respjson.Field
-		Name        respjson.Field
-		API         respjson.Field
-		Npm         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigListProvidersResponseProvider) RawJSON() string { return r.JSON.raw }
-func (r *ConfigListProvidersResponseProvider) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigListProvidersResponseProviderModel struct {
-	ID          string                                        `json:"id,required"`
-	Attachment  bool                                          `json:"attachment,required"`
-	Cost        ConfigListProvidersResponseProviderModelCost  `json:"cost,required"`
-	Limit       ConfigListProvidersResponseProviderModelLimit `json:"limit,required"`
-	Name        string                                        `json:"name,required"`
-	Options     map[string]any                                `json:"options,required"`
-	Reasoning   bool                                          `json:"reasoning,required"`
-	ReleaseDate string                                        `json:"release_date,required"`
-	Temperature bool                                          `json:"temperature,required"`
-	ToolCall    bool                                          `json:"tool_call,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Attachment  respjson.Field
-		Cost        respjson.Field
-		Limit       respjson.Field
-		Name        respjson.Field
-		Options     respjson.Field
-		Reasoning   respjson.Field
-		ReleaseDate respjson.Field
-		Temperature respjson.Field
-		ToolCall    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigListProvidersResponseProviderModel) RawJSON() string { return r.JSON.raw }
-func (r *ConfigListProvidersResponseProviderModel) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigListProvidersResponseProviderModelCost struct {
-	Input      float64 `json:"input,required"`
-	Output     float64 `json:"output,required"`
-	CacheRead  float64 `json:"cache_read"`
-	CacheWrite float64 `json:"cache_write"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Input       respjson.Field
-		Output      respjson.Field
-		CacheRead   respjson.Field
-		CacheWrite  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigListProvidersResponseProviderModelCost) RawJSON() string { return r.JSON.raw }
-func (r *ConfigListProvidersResponseProviderModelCost) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConfigListProvidersResponseProviderModelLimit struct {
-	Context float64 `json:"context,required"`
-	Output  float64 `json:"output,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Context     respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConfigListProvidersResponseProviderModelLimit) RawJSON() string { return r.JSON.raw }
-func (r *ConfigListProvidersResponseProviderModelLimit) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r McpRemoteConfigType) IsKnown() bool {
+	switch r {
+	case McpRemoteConfigTypeRemote:
+		return true
+	}
+	return false
 }
