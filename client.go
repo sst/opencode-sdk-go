@@ -17,6 +17,7 @@ import (
 type Client struct {
 	Options []option.RequestOption
 	Event   *EventService
+	Path    *PathService
 	App     *AppService
 	Agent   *AgentService
 	Find    *FindService
@@ -48,6 +49,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r = &Client{Options: opts}
 
 	r.Event = NewEventService(opts...)
+	r.Path = NewPathService(opts...)
 	r.App = NewAppService(opts...)
 	r.Agent = NewAgentService(opts...)
 	r.Find = NewFindService(opts...)
