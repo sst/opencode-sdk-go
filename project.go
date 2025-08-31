@@ -5,8 +5,11 @@ package opencode
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/apiquery"
+	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 )
@@ -31,10 +34,10 @@ func NewProjectService(opts ...option.RequestOption) (r *ProjectService) {
 }
 
 // List all projects
-func (r *ProjectService) List(ctx context.Context, opts ...option.RequestOption) (res *[]Project, err error) {
+func (r *ProjectService) List(ctx context.Context, query ProjectListParams, opts ...option.RequestOption) (res *[]Project, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "project"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -98,4 +101,16 @@ func (r ProjectVcs) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type ProjectListParams struct {
+	Directory param.Field[string] `query:"directory"`
+}
+
+// URLQuery serializes [ProjectListParams]'s query parameters as `url.Values`.
+func (r ProjectListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
 }
