@@ -148,54 +148,6 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestSessionChatWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Chat(
-		context.TODO(),
-		"id",
-		opencode.SessionChatParams{
-			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.TextPartInputParam{
-				Text:      opencode.F("text"),
-				Type:      opencode.F(opencode.TextPartInputTypeText),
-				ID:        opencode.F("id"),
-				Synthetic: opencode.F(true),
-				Time: opencode.F(opencode.TextPartInputTimeParam{
-					Start: opencode.F(0.000000),
-					End:   opencode.F(0.000000),
-				}),
-			}}),
-			Directory: opencode.F("directory"),
-			Agent:     opencode.F("agent"),
-			MessageID: opencode.F("msg"),
-			Model: opencode.F(opencode.SessionChatParamsModel{
-				ModelID:    opencode.F("modelID"),
-				ProviderID: opencode.F("providerID"),
-			}),
-			System: opencode.F("system"),
-			Tools: opencode.F(map[string]bool{
-				"foo": true,
-			}),
-		},
-	)
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
 func TestSessionChildrenWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
@@ -362,6 +314,54 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 		"id",
 		opencode.SessionMessagesParams{
 			Directory: opencode.F("directory"),
+		},
+	)
+	if err != nil {
+		var apierr *opencode.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestSessionPromptWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := opencode.NewClient(
+		option.WithBaseURL(baseURL),
+	)
+	_, err := client.Session.Prompt(
+		context.TODO(),
+		"id",
+		opencode.SessionPromptParams{
+			Parts: opencode.F([]opencode.SessionPromptParamsPartUnion{opencode.TextPartInputParam{
+				Text:      opencode.F("text"),
+				Type:      opencode.F(opencode.TextPartInputTypeText),
+				ID:        opencode.F("id"),
+				Synthetic: opencode.F(true),
+				Time: opencode.F(opencode.TextPartInputTimeParam{
+					Start: opencode.F(0.000000),
+					End:   opencode.F(0.000000),
+				}),
+			}}),
+			Directory: opencode.F("directory"),
+			Agent:     opencode.F("agent"),
+			MessageID: opencode.F("msg"),
+			Model: opencode.F(opencode.SessionPromptParamsModel{
+				ModelID:    opencode.F("modelID"),
+				ProviderID: opencode.F("providerID"),
+			}),
+			System: opencode.F("system"),
+			Tools: opencode.F(map[string]bool{
+				"foo": true,
+			}),
 		},
 	)
 	if err != nil {

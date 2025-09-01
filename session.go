@@ -92,18 +92,6 @@ func (r *SessionService) Abort(ctx context.Context, id string, body SessionAbort
 	return
 }
 
-// Create and send a new message to a session
-func (r *SessionService) Chat(ctx context.Context, id string, params SessionChatParams, opts ...option.RequestOption) (res *SessionChatResponse, err error) {
-	opts = append(r.Options[:], opts...)
-	if id == "" {
-		err = errors.New("missing required id parameter")
-		return
-	}
-	path := fmt.Sprintf("session/%s/message", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
-}
-
 // Get a session's children
 func (r *SessionService) Children(ctx context.Context, id string, query SessionChildrenParams, opts ...option.RequestOption) (res *[]Session, err error) {
 	opts = append(r.Options[:], opts...)
@@ -177,6 +165,18 @@ func (r *SessionService) Messages(ctx context.Context, id string, query SessionM
 	}
 	path := fmt.Sprintf("session/%s/message", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return
+}
+
+// Create and send a new message to a session
+func (r *SessionService) Prompt(ctx context.Context, id string, params SessionPromptParams, opts ...option.RequestOption) (res *SessionPromptResponse, err error) {
+	opts = append(r.Options[:], opts...)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return
+	}
+	path := fmt.Sprintf("session/%s/message", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
@@ -333,7 +333,7 @@ func (r AgentPartInputParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r AgentPartInputParam) implementsSessionChatParamsPartUnion() {}
+func (r AgentPartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type AgentPartInputType string
 
@@ -709,7 +709,7 @@ func (r FilePartInputParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r FilePartInputParam) implementsSessionChatParamsPartUnion() {}
+func (r FilePartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type FilePartInputType string
 
@@ -1820,7 +1820,7 @@ func (r TextPartInputParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r TextPartInputParam) implementsSessionChatParamsPartUnion() {}
+func (r TextPartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type TextPartInputType string
 
@@ -2296,29 +2296,6 @@ func (r userMessageTimeJSON) RawJSON() string {
 	return r.raw
 }
 
-type SessionChatResponse struct {
-	Info  AssistantMessage        `json:"info,required"`
-	Parts []Part                  `json:"parts,required"`
-	JSON  sessionChatResponseJSON `json:"-"`
-}
-
-// sessionChatResponseJSON contains the JSON metadata for the struct
-// [SessionChatResponse]
-type sessionChatResponseJSON struct {
-	Info        apijson.Field
-	Parts       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionChatResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionChatResponseJSON) RawJSON() string {
-	return r.raw
-}
-
 type SessionCommandResponse struct {
 	Info  AssistantMessage           `json:"info,required"`
 	Parts []Part                     `json:"parts,required"`
@@ -2385,6 +2362,29 @@ func (r *SessionMessagesResponse) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r sessionMessagesResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type SessionPromptResponse struct {
+	Info  AssistantMessage          `json:"info,required"`
+	Parts []Part                    `json:"parts,required"`
+	JSON  sessionPromptResponseJSON `json:"-"`
+}
+
+// sessionPromptResponseJSON contains the JSON metadata for the struct
+// [SessionPromptResponse]
+type sessionPromptResponseJSON struct {
+	Info        apijson.Field
+	Parts       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SessionPromptResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r sessionPromptResponseJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -2457,78 +2457,6 @@ func (r SessionAbortParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
-}
-
-type SessionChatParams struct {
-	Parts     param.Field[[]SessionChatParamsPartUnion] `json:"parts,required"`
-	Directory param.Field[string]                       `query:"directory"`
-	Agent     param.Field[string]                       `json:"agent"`
-	MessageID param.Field[string]                       `json:"messageID"`
-	Model     param.Field[SessionChatParamsModel]       `json:"model"`
-	System    param.Field[string]                       `json:"system"`
-	Tools     param.Field[map[string]bool]              `json:"tools"`
-}
-
-func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// URLQuery serializes [SessionChatParams]'s query parameters as `url.Values`.
-func (r SessionChatParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
-}
-
-type SessionChatParamsPart struct {
-	Type      param.Field[SessionChatParamsPartsType] `json:"type,required"`
-	ID        param.Field[string]                     `json:"id"`
-	Filename  param.Field[string]                     `json:"filename"`
-	Mime      param.Field[string]                     `json:"mime"`
-	Name      param.Field[string]                     `json:"name"`
-	Source    param.Field[interface{}]                `json:"source"`
-	Synthetic param.Field[bool]                       `json:"synthetic"`
-	Text      param.Field[string]                     `json:"text"`
-	Time      param.Field[interface{}]                `json:"time"`
-	URL       param.Field[string]                     `json:"url"`
-}
-
-func (r SessionChatParamsPart) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SessionChatParamsPart) implementsSessionChatParamsPartUnion() {}
-
-// Satisfied by [TextPartInputParam], [FilePartInputParam], [AgentPartInputParam],
-// [SessionChatParamsPart].
-type SessionChatParamsPartUnion interface {
-	implementsSessionChatParamsPartUnion()
-}
-
-type SessionChatParamsPartsType string
-
-const (
-	SessionChatParamsPartsTypeText  SessionChatParamsPartsType = "text"
-	SessionChatParamsPartsTypeFile  SessionChatParamsPartsType = "file"
-	SessionChatParamsPartsTypeAgent SessionChatParamsPartsType = "agent"
-)
-
-func (r SessionChatParamsPartsType) IsKnown() bool {
-	switch r {
-	case SessionChatParamsPartsTypeText, SessionChatParamsPartsTypeFile, SessionChatParamsPartsTypeAgent:
-		return true
-	}
-	return false
-}
-
-type SessionChatParamsModel struct {
-	ModelID    param.Field[string] `json:"modelID,required"`
-	ProviderID param.Field[string] `json:"providerID,required"`
-}
-
-func (r SessionChatParamsModel) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 type SessionChildrenParams struct {
@@ -2617,6 +2545,78 @@ func (r SessionMessagesParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
+}
+
+type SessionPromptParams struct {
+	Parts     param.Field[[]SessionPromptParamsPartUnion] `json:"parts,required"`
+	Directory param.Field[string]                         `query:"directory"`
+	Agent     param.Field[string]                         `json:"agent"`
+	MessageID param.Field[string]                         `json:"messageID"`
+	Model     param.Field[SessionPromptParamsModel]       `json:"model"`
+	System    param.Field[string]                         `json:"system"`
+	Tools     param.Field[map[string]bool]                `json:"tools"`
+}
+
+func (r SessionPromptParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// URLQuery serializes [SessionPromptParams]'s query parameters as `url.Values`.
+func (r SessionPromptParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type SessionPromptParamsPart struct {
+	Type      param.Field[SessionPromptParamsPartsType] `json:"type,required"`
+	ID        param.Field[string]                       `json:"id"`
+	Filename  param.Field[string]                       `json:"filename"`
+	Mime      param.Field[string]                       `json:"mime"`
+	Name      param.Field[string]                       `json:"name"`
+	Source    param.Field[interface{}]                  `json:"source"`
+	Synthetic param.Field[bool]                         `json:"synthetic"`
+	Text      param.Field[string]                       `json:"text"`
+	Time      param.Field[interface{}]                  `json:"time"`
+	URL       param.Field[string]                       `json:"url"`
+}
+
+func (r SessionPromptParamsPart) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r SessionPromptParamsPart) implementsSessionPromptParamsPartUnion() {}
+
+// Satisfied by [TextPartInputParam], [FilePartInputParam], [AgentPartInputParam],
+// [SessionPromptParamsPart].
+type SessionPromptParamsPartUnion interface {
+	implementsSessionPromptParamsPartUnion()
+}
+
+type SessionPromptParamsPartsType string
+
+const (
+	SessionPromptParamsPartsTypeText  SessionPromptParamsPartsType = "text"
+	SessionPromptParamsPartsTypeFile  SessionPromptParamsPartsType = "file"
+	SessionPromptParamsPartsTypeAgent SessionPromptParamsPartsType = "agent"
+)
+
+func (r SessionPromptParamsPartsType) IsKnown() bool {
+	switch r {
+	case SessionPromptParamsPartsTypeText, SessionPromptParamsPartsTypeFile, SessionPromptParamsPartsTypeAgent:
+		return true
+	}
+	return false
+}
+
+type SessionPromptParamsModel struct {
+	ModelID    param.Field[string] `json:"modelID,required"`
+	ProviderID param.Field[string] `json:"providerID,required"`
+}
+
+func (r SessionPromptParamsModel) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type SessionRevertParams struct {
