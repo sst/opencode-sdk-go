@@ -41,6 +41,14 @@ func (r *ProjectService) List(ctx context.Context, query ProjectListParams, opts
 	return
 }
 
+// Get the current project
+func (r *ProjectService) Current(ctx context.Context, query ProjectCurrentParams, opts ...option.RequestOption) (res *Project, err error) {
+	opts = append(r.Options[:], opts...)
+	path := "project/current"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return
+}
+
 type Project struct {
 	ID       string      `json:"id,required"`
 	Time     ProjectTime `json:"time,required"`
@@ -109,6 +117,18 @@ type ProjectListParams struct {
 
 // URLQuery serializes [ProjectListParams]'s query parameters as `url.Values`.
 func (r ProjectListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type ProjectCurrentParams struct {
+	Directory param.Field[string] `query:"directory"`
+}
+
+// URLQuery serializes [ProjectCurrentParams]'s query parameters as `url.Values`.
+func (r ProjectCurrentParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
