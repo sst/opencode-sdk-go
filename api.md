@@ -106,6 +106,7 @@ Response Types:
 Methods:
 
 - <code title="get /project">client.Project.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#ProjectService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#ProjectListParams">ProjectListParams</a>) ([]<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#Project">Project</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /project/current">client.Project.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#ProjectService.Current">Current</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#ProjectCurrentParams">ProjectCurrentParams</a>) (<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/sst/opencode-sdk-go#Project">Project</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Session
 
