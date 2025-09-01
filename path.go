@@ -42,15 +42,19 @@ func (r *PathService) Get(ctx context.Context, query PathGetParams, opts ...opti
 }
 
 type Path struct {
-	Config string   `json:"config,required"`
-	State  string   `json:"state,required"`
-	JSON   pathJSON `json:"-"`
+	Config    string   `json:"config,required"`
+	Directory string   `json:"directory,required"`
+	State     string   `json:"state,required"`
+	Worktree  string   `json:"worktree,required"`
+	JSON      pathJSON `json:"-"`
 }
 
 // pathJSON contains the JSON metadata for the struct [Path]
 type pathJSON struct {
 	Config      apijson.Field
+	Directory   apijson.Field
 	State       apijson.Field
+	Worktree    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
