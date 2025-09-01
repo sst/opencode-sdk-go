@@ -164,7 +164,6 @@ func TestSessionChatWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		opencode.SessionChatParams{
-			ModelID: opencode.F("modelID"),
 			Parts: opencode.F([]opencode.SessionChatParamsPartUnion{opencode.TextPartInputParam{
 				Text:      opencode.F("text"),
 				Type:      opencode.F(opencode.TextPartInputTypeText),
@@ -175,11 +174,14 @@ func TestSessionChatWithOptionalParams(t *testing.T) {
 					End:   opencode.F(0.000000),
 				}),
 			}}),
-			ProviderID: opencode.F("providerID"),
-			Directory:  opencode.F("directory"),
-			Agent:      opencode.F("agent"),
-			MessageID:  opencode.F("msg"),
-			System:     opencode.F("system"),
+			Directory: opencode.F("directory"),
+			Agent:     opencode.F("agent"),
+			MessageID: opencode.F("msg"),
+			Model: opencode.F(opencode.SessionChatParamsModel{
+				ModelID:    opencode.F("modelID"),
+				ProviderID: opencode.F("providerID"),
+			}),
+			System: opencode.F("system"),
 			Tools: opencode.F(map[string]bool{
 				"foo": true,
 			}),

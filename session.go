@@ -2460,14 +2460,13 @@ func (r SessionAbortParams) URLQuery() (v url.Values) {
 }
 
 type SessionChatParams struct {
-	ModelID    param.Field[string]                       `json:"modelID,required"`
-	Parts      param.Field[[]SessionChatParamsPartUnion] `json:"parts,required"`
-	ProviderID param.Field[string]                       `json:"providerID,required"`
-	Directory  param.Field[string]                       `query:"directory"`
-	Agent      param.Field[string]                       `json:"agent"`
-	MessageID  param.Field[string]                       `json:"messageID"`
-	System     param.Field[string]                       `json:"system"`
-	Tools      param.Field[map[string]bool]              `json:"tools"`
+	Parts     param.Field[[]SessionChatParamsPartUnion] `json:"parts,required"`
+	Directory param.Field[string]                       `query:"directory"`
+	Agent     param.Field[string]                       `json:"agent"`
+	MessageID param.Field[string]                       `json:"messageID"`
+	Model     param.Field[SessionChatParamsModel]       `json:"model"`
+	System    param.Field[string]                       `json:"system"`
+	Tools     param.Field[map[string]bool]              `json:"tools"`
 }
 
 func (r SessionChatParams) MarshalJSON() (data []byte, err error) {
@@ -2521,6 +2520,15 @@ func (r SessionChatParamsPartsType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type SessionChatParamsModel struct {
+	ModelID    param.Field[string] `json:"modelID,required"`
+	ProviderID param.Field[string] `json:"providerID,required"`
+}
+
+func (r SessionChatParamsModel) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type SessionChildrenParams struct {
