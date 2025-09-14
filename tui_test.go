@@ -13,7 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestTuiAppendPrompt(t *testing.T) {
+func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,7 +26,8 @@ func TestTuiAppendPrompt(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Tui.AppendPrompt(context.TODO(), opencode.TuiAppendPromptParams{
-		Text: opencode.F("text"),
+		Text:      opencode.F("text"),
+		Directory: opencode.F("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -37,7 +38,7 @@ func TestTuiAppendPrompt(t *testing.T) {
 	}
 }
 
-func TestTuiClearPrompt(t *testing.T) {
+func TestTuiClearPromptWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -49,7 +50,9 @@ func TestTuiClearPrompt(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.ClearPrompt(context.TODO())
+	_, err := client.Tui.ClearPrompt(context.TODO(), opencode.TuiClearPromptParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -59,7 +62,7 @@ func TestTuiClearPrompt(t *testing.T) {
 	}
 }
 
-func TestTuiExecuteCommand(t *testing.T) {
+func TestTuiExecuteCommandWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -72,7 +75,8 @@ func TestTuiExecuteCommand(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Tui.ExecuteCommand(context.TODO(), opencode.TuiExecuteCommandParams{
-		Command: opencode.F("command"),
+		Command:   opencode.F("command"),
+		Directory: opencode.F("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -83,7 +87,7 @@ func TestTuiExecuteCommand(t *testing.T) {
 	}
 }
 
-func TestTuiOpenHelp(t *testing.T) {
+func TestTuiOpenHelpWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -95,7 +99,9 @@ func TestTuiOpenHelp(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.OpenHelp(context.TODO())
+	_, err := client.Tui.OpenHelp(context.TODO(), opencode.TuiOpenHelpParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -105,7 +111,7 @@ func TestTuiOpenHelp(t *testing.T) {
 	}
 }
 
-func TestTuiOpenModels(t *testing.T) {
+func TestTuiOpenModelsWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -117,7 +123,9 @@ func TestTuiOpenModels(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.OpenModels(context.TODO())
+	_, err := client.Tui.OpenModels(context.TODO(), opencode.TuiOpenModelsParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -127,7 +135,7 @@ func TestTuiOpenModels(t *testing.T) {
 	}
 }
 
-func TestTuiOpenSessions(t *testing.T) {
+func TestTuiOpenSessionsWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -139,7 +147,9 @@ func TestTuiOpenSessions(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.OpenSessions(context.TODO())
+	_, err := client.Tui.OpenSessions(context.TODO(), opencode.TuiOpenSessionsParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -149,7 +159,7 @@ func TestTuiOpenSessions(t *testing.T) {
 	}
 }
 
-func TestTuiOpenThemes(t *testing.T) {
+func TestTuiOpenThemesWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -161,7 +171,9 @@ func TestTuiOpenThemes(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.OpenThemes(context.TODO())
+	_, err := client.Tui.OpenThemes(context.TODO(), opencode.TuiOpenThemesParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -184,9 +196,10 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Tui.ShowToast(context.TODO(), opencode.TuiShowToastParams{
-		Message: opencode.F("message"),
-		Variant: opencode.F(opencode.TuiShowToastParamsVariantInfo),
-		Title:   opencode.F("title"),
+		Message:   opencode.F("message"),
+		Variant:   opencode.F(opencode.TuiShowToastParamsVariantInfo),
+		Directory: opencode.F("directory"),
+		Title:     opencode.F("title"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -197,7 +210,7 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestTuiSubmitPrompt(t *testing.T) {
+func TestTuiSubmitPromptWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -209,7 +222,9 @@ func TestTuiSubmitPrompt(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Tui.SubmitPrompt(context.TODO())
+	_, err := client.Tui.SubmitPrompt(context.TODO(), opencode.TuiSubmitPromptParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
