@@ -2372,7 +2372,7 @@ func (r sessionPromptResponseJSON) RawJSON() string {
 }
 
 type SessionNewParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory param.Field[string] `query:"directory,required"`
 	ParentID  param.Field[string] `json:"parentID"`
 	Title     param.Field[string] `json:"title"`
 }
