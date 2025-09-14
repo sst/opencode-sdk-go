@@ -13,7 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestProjectList(t *testing.T) {
+func TestProjectListWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -25,7 +25,9 @@ func TestProjectList(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Project.List(context.TODO())
+	_, err := client.Project.List(context.TODO(), opencode.ProjectListParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -35,7 +37,7 @@ func TestProjectList(t *testing.T) {
 	}
 }
 
-func TestProjectCurrent(t *testing.T) {
+func TestProjectCurrentWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -47,7 +49,9 @@ func TestProjectCurrent(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Project.Current(context.TODO())
+	_, err := client.Project.Current(context.TODO(), opencode.ProjectCurrentParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
