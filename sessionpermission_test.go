@@ -13,7 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestSessionPermissionRespondWithOptionalParams(t *testing.T) {
+func TestSessionPermissionRespond(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -30,8 +30,7 @@ func TestSessionPermissionRespondWithOptionalParams(t *testing.T) {
 		"id",
 		"permissionID",
 		opencode.SessionPermissionRespondParams{
-			Response:  opencode.F(opencode.SessionPermissionRespondParamsResponseOnce),
-			Directory: opencode.F("directory"),
+			Response: opencode.F(opencode.SessionPermissionRespondParamsResponseOnce),
 		},
 	)
 	if err != nil {

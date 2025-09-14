@@ -23,7 +23,7 @@ func TestUsage(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	sessions, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+	sessions, err := client.Session.List(context.TODO())
 	if err != nil {
 		t.Error(err)
 		return

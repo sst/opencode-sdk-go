@@ -5,10 +5,8 @@ package opencode
 import (
 	"context"
 	"net/http"
-	"net/url"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
-	"github.com/sst/opencode-sdk-go/internal/apiquery"
 	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
@@ -34,18 +32,18 @@ func NewAppService(opts ...option.RequestOption) (r *AppService) {
 }
 
 // Write a log entry to the server logs
-func (r *AppService) Log(ctx context.Context, params AppLogParams, opts ...option.RequestOption) (res *bool, err error) {
+func (r *AppService) Log(ctx context.Context, body AppLogParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "log"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
 }
 
 // List all providers
-func (r *AppService) Providers(ctx context.Context, query AppProvidersParams, opts ...option.RequestOption) (res *AppProvidersResponse, err error) {
+func (r *AppService) Providers(ctx context.Context, opts ...option.RequestOption) (res *AppProvidersResponse, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "config/providers"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
@@ -218,22 +216,13 @@ type AppLogParams struct {
 	// Log message
 	Message param.Field[string] `json:"message,required"`
 	// Service name for the log entry
-	Service   param.Field[string] `json:"service,required"`
-	Directory param.Field[string] `query:"directory"`
+	Service param.Field[string] `json:"service,required"`
 	// Additional metadata for the log entry
 	Extra param.Field[map[string]interface{}] `json:"extra"`
 }
 
 func (r AppLogParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// URLQuery serializes [AppLogParams]'s query parameters as `url.Values`.
-func (r AppLogParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
 }
 
 // Log level
@@ -252,16 +241,4 @@ func (r AppLogParamsLevel) IsKnown() bool {
 		return true
 	}
 	return false
-}
-
-type AppProvidersParams struct {
-	Directory param.Field[string] `query:"directory"`
-}
-
-// URLQuery serializes [AppProvidersParams]'s query parameters as `url.Values`.
-func (r AppProvidersParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
 }

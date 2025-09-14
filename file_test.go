@@ -13,7 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestFileListWithOptionalParams(t *testing.T) {
+func TestFileList(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,8 +26,7 @@ func TestFileListWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.File.List(context.TODO(), opencode.FileListParams{
-		Path:      opencode.F("path"),
-		Directory: opencode.F("directory"),
+		Path: opencode.F("path"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -38,7 +37,7 @@ func TestFileListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestFileReadWithOptionalParams(t *testing.T) {
+func TestFileRead(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -51,8 +50,7 @@ func TestFileReadWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.File.Read(context.TODO(), opencode.FileReadParams{
-		Path:      opencode.F("path"),
-		Directory: opencode.F("directory"),
+		Path: opencode.F("path"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -63,7 +61,7 @@ func TestFileReadWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestFileStatusWithOptionalParams(t *testing.T) {
+func TestFileStatus(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -75,9 +73,7 @@ func TestFileStatusWithOptionalParams(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.File.Status(context.TODO(), opencode.FileStatusParams{
-		Directory: opencode.F("directory"),
-	})
+	_, err := client.File.Status(context.TODO())
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {

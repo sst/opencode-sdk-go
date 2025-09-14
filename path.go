@@ -5,11 +5,8 @@ package opencode
 import (
 	"context"
 	"net/http"
-	"net/url"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
-	"github.com/sst/opencode-sdk-go/internal/apiquery"
-	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 )
@@ -34,10 +31,10 @@ func NewPathService(opts ...option.RequestOption) (r *PathService) {
 }
 
 // Get the current path
-func (r *PathService) Get(ctx context.Context, query PathGetParams, opts ...option.RequestOption) (res *Path, err error) {
+func (r *PathService) Get(ctx context.Context, opts ...option.RequestOption) (res *Path, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "path"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
@@ -65,16 +62,4 @@ func (r *Path) UnmarshalJSON(data []byte) (err error) {
 
 func (r pathJSON) RawJSON() string {
 	return r.raw
-}
-
-type PathGetParams struct {
-	Directory param.Field[string] `query:"directory"`
-}
-
-// URLQuery serializes [PathGetParams]'s query parameters as `url.Values`.
-func (r PathGetParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
 }

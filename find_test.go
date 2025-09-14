@@ -13,7 +13,7 @@ import (
 	"github.com/sst/opencode-sdk-go/option"
 )
 
-func TestFindFilesWithOptionalParams(t *testing.T) {
+func TestFindFiles(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,8 +26,7 @@ func TestFindFilesWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Find.Files(context.TODO(), opencode.FindFilesParams{
-		Query:     opencode.F("query"),
-		Directory: opencode.F("directory"),
+		Query: opencode.F("query"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -38,7 +37,7 @@ func TestFindFilesWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestFindSymbolsWithOptionalParams(t *testing.T) {
+func TestFindSymbols(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -51,8 +50,7 @@ func TestFindSymbolsWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Find.Symbols(context.TODO(), opencode.FindSymbolsParams{
-		Query:     opencode.F("query"),
-		Directory: opencode.F("directory"),
+		Query: opencode.F("query"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -63,7 +61,7 @@ func TestFindSymbolsWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestFindTextWithOptionalParams(t *testing.T) {
+func TestFindText(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -76,8 +74,7 @@ func TestFindTextWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.Find.Text(context.TODO(), opencode.FindTextParams{
-		Pattern:   opencode.F("pattern"),
-		Directory: opencode.F("directory"),
+		Pattern: opencode.F("pattern"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
