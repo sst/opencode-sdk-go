@@ -55,7 +55,8 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		opencode.SessionUpdateParams{
-			Title: opencode.F("title"),
+			Directory: opencode.F("directory"),
+			Title:     opencode.F("title"),
 		},
 	)
 	if err != nil {
@@ -67,7 +68,7 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestSessionList(t *testing.T) {
+func TestSessionListWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -79,7 +80,9 @@ func TestSessionList(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.List(context.TODO())
+	_, err := client.Session.List(context.TODO(), opencode.SessionListParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -89,7 +92,7 @@ func TestSessionList(t *testing.T) {
 	}
 }
 
-func TestSessionDelete(t *testing.T) {
+func TestSessionDeleteWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -101,7 +104,13 @@ func TestSessionDelete(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Delete(context.TODO(), "id")
+	_, err := client.Session.Delete(
+		context.TODO(),
+		"id",
+		opencode.SessionDeleteParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -111,7 +120,7 @@ func TestSessionDelete(t *testing.T) {
 	}
 }
 
-func TestSessionAbort(t *testing.T) {
+func TestSessionAbortWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -123,7 +132,13 @@ func TestSessionAbort(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Abort(context.TODO(), "id")
+	_, err := client.Session.Abort(
+		context.TODO(),
+		"id",
+		opencode.SessionAbortParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -133,7 +148,7 @@ func TestSessionAbort(t *testing.T) {
 	}
 }
 
-func TestSessionChildren(t *testing.T) {
+func TestSessionChildrenWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -145,7 +160,13 @@ func TestSessionChildren(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Children(context.TODO(), "id")
+	_, err := client.Session.Children(
+		context.TODO(),
+		"id",
+		opencode.SessionChildrenParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -173,6 +194,7 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 		opencode.SessionCommandParams{
 			Arguments: opencode.F("arguments"),
 			Command:   opencode.F("command"),
+			Directory: opencode.F("directory"),
 			Agent:     opencode.F("agent"),
 			MessageID: opencode.F("msgJ!"),
 			Model:     opencode.F("model"),
@@ -187,7 +209,7 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestSessionGet(t *testing.T) {
+func TestSessionGetWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -199,7 +221,13 @@ func TestSessionGet(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Get(context.TODO(), "id")
+	_, err := client.Session.Get(
+		context.TODO(),
+		"id",
+		opencode.SessionGetParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -209,7 +237,7 @@ func TestSessionGet(t *testing.T) {
 	}
 }
 
-func TestSessionInit(t *testing.T) {
+func TestSessionInitWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -228,6 +256,7 @@ func TestSessionInit(t *testing.T) {
 			MessageID:  opencode.F("messageID"),
 			ModelID:    opencode.F("modelID"),
 			ProviderID: opencode.F("providerID"),
+			Directory:  opencode.F("directory"),
 		},
 	)
 	if err != nil {
@@ -239,7 +268,7 @@ func TestSessionInit(t *testing.T) {
 	}
 }
 
-func TestSessionMessage(t *testing.T) {
+func TestSessionMessageWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -255,6 +284,9 @@ func TestSessionMessage(t *testing.T) {
 		context.TODO(),
 		"id",
 		"messageID",
+		opencode.SessionMessageParams{
+			Directory: opencode.F("directory"),
+		},
 	)
 	if err != nil {
 		var apierr *opencode.Error
@@ -265,7 +297,7 @@ func TestSessionMessage(t *testing.T) {
 	}
 }
 
-func TestSessionMessages(t *testing.T) {
+func TestSessionMessagesWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -277,7 +309,13 @@ func TestSessionMessages(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Messages(context.TODO(), "id")
+	_, err := client.Session.Messages(
+		context.TODO(),
+		"id",
+		opencode.SessionMessagesParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -313,6 +351,7 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 					End:   opencode.F(0.000000),
 				}),
 			}}),
+			Directory: opencode.F("directory"),
 			Agent:     opencode.F("agent"),
 			MessageID: opencode.F("msgJ!"),
 			Model: opencode.F(opencode.SessionPromptParamsModel{
@@ -351,6 +390,7 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 		"id",
 		opencode.SessionRevertParams{
 			MessageID: opencode.F("msgJ!"),
+			Directory: opencode.F("directory"),
 			PartID:    opencode.F("prtJ!"),
 		},
 	)
@@ -363,7 +403,7 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestSessionShare(t *testing.T) {
+func TestSessionShareWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -375,7 +415,13 @@ func TestSessionShare(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Share(context.TODO(), "id")
+	_, err := client.Session.Share(
+		context.TODO(),
+		"id",
+		opencode.SessionShareParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -385,7 +431,7 @@ func TestSessionShare(t *testing.T) {
 	}
 }
 
-func TestSessionShell(t *testing.T) {
+func TestSessionShellWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -401,8 +447,9 @@ func TestSessionShell(t *testing.T) {
 		context.TODO(),
 		"id",
 		opencode.SessionShellParams{
-			Agent:   opencode.F("agent"),
-			Command: opencode.F("command"),
+			Agent:     opencode.F("agent"),
+			Command:   opencode.F("command"),
+			Directory: opencode.F("directory"),
 		},
 	)
 	if err != nil {
@@ -414,7 +461,7 @@ func TestSessionShell(t *testing.T) {
 	}
 }
 
-func TestSessionSummarize(t *testing.T) {
+func TestSessionSummarizeWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -432,6 +479,7 @@ func TestSessionSummarize(t *testing.T) {
 		opencode.SessionSummarizeParams{
 			ModelID:    opencode.F("modelID"),
 			ProviderID: opencode.F("providerID"),
+			Directory:  opencode.F("directory"),
 		},
 	)
 	if err != nil {
@@ -443,7 +491,7 @@ func TestSessionSummarize(t *testing.T) {
 	}
 }
 
-func TestSessionUnrevert(t *testing.T) {
+func TestSessionUnrevertWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -455,7 +503,13 @@ func TestSessionUnrevert(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Unrevert(context.TODO(), "id")
+	_, err := client.Session.Unrevert(
+		context.TODO(),
+		"id",
+		opencode.SessionUnrevertParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
@@ -465,7 +519,7 @@ func TestSessionUnrevert(t *testing.T) {
 	}
 }
 
-func TestSessionUnshare(t *testing.T) {
+func TestSessionUnshareWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -477,7 +531,13 @@ func TestSessionUnshare(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.Session.Unshare(context.TODO(), "id")
+	_, err := client.Session.Unshare(
+		context.TODO(),
+		"id",
+		opencode.SessionUnshareParams{
+			Directory: opencode.F("directory"),
+		},
+	)
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {

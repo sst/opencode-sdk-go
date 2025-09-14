@@ -5,8 +5,11 @@ package opencode
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
+	"github.com/sst/opencode-sdk-go/internal/apiquery"
+	"github.com/sst/opencode-sdk-go/internal/param"
 	"github.com/sst/opencode-sdk-go/internal/requestconfig"
 	"github.com/sst/opencode-sdk-go/option"
 )
@@ -31,10 +34,10 @@ func NewAgentService(opts ...option.RequestOption) (r *AgentService) {
 }
 
 // List all agents
-func (r *AgentService) List(ctx context.Context, opts ...option.RequestOption) (res *[]Agent, err error) {
+func (r *AgentService) List(ctx context.Context, query AgentListParams, opts ...option.RequestOption) (res *[]Agent, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "agent"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -186,4 +189,16 @@ func (r *AgentModel) UnmarshalJSON(data []byte) (err error) {
 
 func (r agentModelJSON) RawJSON() string {
 	return r.raw
+}
+
+type AgentListParams struct {
+	Directory param.Field[string] `query:"directory"`
+}
+
+// URLQuery serializes [AgentListParams]'s query parameters as `url.Values`.
+func (r AgentListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
 }

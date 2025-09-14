@@ -26,9 +26,10 @@ func TestAppLogWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 	)
 	_, err := client.App.Log(context.TODO(), opencode.AppLogParams{
-		Level:   opencode.F(opencode.AppLogParamsLevelDebug),
-		Message: opencode.F("message"),
-		Service: opencode.F("service"),
+		Level:     opencode.F(opencode.AppLogParamsLevelDebug),
+		Message:   opencode.F("message"),
+		Service:   opencode.F("service"),
+		Directory: opencode.F("directory"),
 		Extra: opencode.F(map[string]interface{}{
 			"foo": "bar",
 		}),
@@ -42,7 +43,7 @@ func TestAppLogWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestAppProviders(t *testing.T) {
+func TestAppProvidersWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -54,7 +55,9 @@ func TestAppProviders(t *testing.T) {
 	client := opencode.NewClient(
 		option.WithBaseURL(baseURL),
 	)
-	_, err := client.App.Providers(context.TODO())
+	_, err := client.App.Providers(context.TODO(), opencode.AppProvidersParams{
+		Directory: opencode.F("directory"),
+	})
 	if err != nil {
 		var apierr *opencode.Error
 		if errors.As(err, &apierr) {
