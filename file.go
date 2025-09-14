@@ -50,10 +50,10 @@ func (r *FileService) Read(ctx context.Context, query FileReadParams, opts ...op
 }
 
 // Get file status
-func (r *FileService) Status(ctx context.Context, query FileStatusParams, opts ...option.RequestOption) (res *[]File, err error) {
+func (r *FileService) Status(ctx context.Context, opts ...option.RequestOption) (res *[]File, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "file/status"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
@@ -228,8 +228,7 @@ func (r fileReadResponsePatchHunkJSON) RawJSON() string {
 }
 
 type FileListParams struct {
-	Path      param.Field[string] `query:"path,required"`
-	Directory param.Field[string] `query:"directory"`
+	Path param.Field[string] `query:"path,required"`
 }
 
 // URLQuery serializes [FileListParams]'s query parameters as `url.Values`.
@@ -241,24 +240,11 @@ func (r FileListParams) URLQuery() (v url.Values) {
 }
 
 type FileReadParams struct {
-	Path      param.Field[string] `query:"path,required"`
-	Directory param.Field[string] `query:"directory"`
+	Path param.Field[string] `query:"path,required"`
 }
 
 // URLQuery serializes [FileReadParams]'s query parameters as `url.Values`.
 func (r FileReadParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
-}
-
-type FileStatusParams struct {
-	Directory param.Field[string] `query:"directory"`
-}
-
-// URLQuery serializes [FileStatusParams]'s query parameters as `url.Values`.
-func (r FileStatusParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

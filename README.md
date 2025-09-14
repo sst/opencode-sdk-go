@@ -49,7 +49,7 @@ import (
 
 func main() {
 	client := opencode.NewClient()
-	sessions, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+	sessions, err := client.Session.List(context.TODO())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -171,7 +171,7 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-_, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+_, err := client.Session.List(context.TODO())
 if err != nil {
 	var apierr *opencode.Error
 	if errors.As(err, &apierr) {
@@ -198,7 +198,6 @@ ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
 client.Session.List(
 	ctx,
-	opencode.SessionListParams{},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
 )
@@ -232,11 +231,7 @@ client := opencode.NewClient(
 )
 
 // Override per-request:
-client.Session.List(
-	context.TODO(),
-	opencode.SessionListParams{},
-	option.WithMaxRetries(5),
-)
+client.Session.List(context.TODO(), option.WithMaxRetries(5))
 ```
 
 ### Accessing raw response data (e.g. response headers)
@@ -247,11 +242,7 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-sessions, err := client.Session.List(
-	context.TODO(),
-	opencode.SessionListParams{},
-	option.WithResponseInto(&response),
-)
+sessions, err := client.Session.List(context.TODO(), option.WithResponseInto(&response))
 if err != nil {
 	// handle error
 }
