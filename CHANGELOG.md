@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 (2025-09-14)
+
+Full Changelog: [v0.12.0...v0.13.0](https://github.com/sst/opencode-sdk-go/compare/v0.12.0...v0.13.0)
+
+### Features
+
+* **api:** api update ([80da4fb](https://github.com/sst/opencode-sdk-go/commit/80da4fb4ea9c6afb51a7e7135d9f5560ce6f2a6c))
+
 ## 0.12.0 (2025-09-14)
 
 Full Changelog: [v0.11.0...v0.12.0](https://github.com/sst/opencode-sdk-go/compare/v0.11.0...v0.12.0)
