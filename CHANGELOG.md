@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.16.1 (2025-09-20)
+
+Full Changelog: [v0.16.0...v0.16.1](https://github.com/sst/opencode-sdk-go/compare/v0.16.0...v0.16.1)
+
+### Bug Fixes
+
+* use slices.Concat instead of sometimes modifying r.Options ([12e8b40](https://github.com/sst/opencode-sdk-go/commit/12e8b40809071095b0abb9b8031686353c8ac149))
+
+
+### Chores
+
+* bump minimum go version to 1.22 ([1a61c5c](https://github.com/sst/opencode-sdk-go/commit/1a61c5cc7e8f68cc1b0c219738cab530cb6aa3a2))
+* do not install brew dependencies in ./scripts/bootstrap by default ([f6d3eaf](https://github.com/sst/opencode-sdk-go/commit/f6d3eafffc20e124bbfae6ac5ddc1b1122ad3e27))
+* update more docs for 1.22 ([a3d0b0f](https://github.com/sst/opencode-sdk-go/commit/a3d0b0f26ed92ce1a6433f5bcf37a6436d268ba5))
+
 ## 0.16.0 (2025-09-17)
 
 Full Changelog: [v0.15.0...v0.16.0](https://github.com/sst/opencode-sdk-go/compare/v0.15.0...v0.16.0)
