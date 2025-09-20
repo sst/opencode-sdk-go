@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"slices"
 
 	"github.com/sst/opencode-sdk-go/internal/apijson"
 	"github.com/sst/opencode-sdk-go/internal/apiquery"
@@ -43,7 +44,7 @@ func (r *EventService) ListStreaming(ctx context.Context, query EventListParams,
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "text/event-stream")}, opts...)
 	path := "event"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
