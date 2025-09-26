@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.2 (2025-09-26)
+
+Full Changelog: [v0.16.1...v0.16.2](https://github.com/sst/opencode-sdk-go/compare/v0.16.1...v0.16.2)
+
+### Bug Fixes
+
+* bugfix for setting JSON keys with special characters ([ac9a36f](https://github.com/sst/opencode-sdk-go/commit/ac9a36feb1c185ebf766d76909d0b86ac805e8a6))
+
 ## 0.16.1 (2025-09-20)
 
 Full Changelog: [v0.16.0...v0.16.1](https://github.com/sst/opencode-sdk-go/compare/v0.16.0...v0.16.1)
