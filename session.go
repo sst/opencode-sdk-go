@@ -1725,14 +1725,15 @@ func (r SymbolSourceRangeStartParam) MarshalJSON() (data []byte, err error) {
 }
 
 type TextPart struct {
-	ID        string       `json:"id,required"`
-	MessageID string       `json:"messageID,required"`
-	SessionID string       `json:"sessionID,required"`
-	Text      string       `json:"text,required"`
-	Type      TextPartType `json:"type,required"`
-	Synthetic bool         `json:"synthetic"`
-	Time      TextPartTime `json:"time"`
-	JSON      textPartJSON `json:"-"`
+	ID        string                 `json:"id,required"`
+	MessageID string                 `json:"messageID,required"`
+	SessionID string                 `json:"sessionID,required"`
+	Text      string                 `json:"text,required"`
+	Type      TextPartType           `json:"type,required"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	Synthetic bool                   `json:"synthetic"`
+	Time      TextPartTime           `json:"time"`
+	JSON      textPartJSON           `json:"-"`
 }
 
 // textPartJSON contains the JSON metadata for the struct [TextPart]
@@ -1742,6 +1743,7 @@ type textPartJSON struct {
 	SessionID   apijson.Field
 	Text        apijson.Field
 	Type        apijson.Field
+	Metadata    apijson.Field
 	Synthetic   apijson.Field
 	Time        apijson.Field
 	raw         string
@@ -1798,6 +1800,7 @@ type TextPartInputParam struct {
 	Text      param.Field[string]                 `json:"text,required"`
 	Type      param.Field[TextPartInputType]      `json:"type,required"`
 	ID        param.Field[string]                 `json:"id"`
+	Metadata  param.Field[map[string]interface{}] `json:"metadata"`
 	Synthetic param.Field[bool]                   `json:"synthetic"`
 	Time      param.Field[TextPartInputTimeParam] `json:"time"`
 }
@@ -1832,14 +1835,15 @@ func (r TextPartInputTimeParam) MarshalJSON() (data []byte, err error) {
 }
 
 type ToolPart struct {
-	ID        string        `json:"id,required"`
-	CallID    string        `json:"callID,required"`
-	MessageID string        `json:"messageID,required"`
-	SessionID string        `json:"sessionID,required"`
-	State     ToolPartState `json:"state,required"`
-	Tool      string        `json:"tool,required"`
-	Type      ToolPartType  `json:"type,required"`
-	JSON      toolPartJSON  `json:"-"`
+	ID        string                 `json:"id,required"`
+	CallID    string                 `json:"callID,required"`
+	MessageID string                 `json:"messageID,required"`
+	SessionID string                 `json:"sessionID,required"`
+	State     ToolPartState          `json:"state,required"`
+	Tool      string                 `json:"tool,required"`
+	Type      ToolPartType           `json:"type,required"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	JSON      toolPartJSON           `json:"-"`
 }
 
 // toolPartJSON contains the JSON metadata for the struct [ToolPart]
@@ -1851,6 +1855,7 @@ type toolPartJSON struct {
 	State       apijson.Field
 	Tool        apijson.Field
 	Type        apijson.Field
+	Metadata    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -2557,6 +2562,7 @@ type SessionPromptParamsPart struct {
 	Type      param.Field[SessionPromptParamsPartsType] `json:"type,required"`
 	ID        param.Field[string]                       `json:"id"`
 	Filename  param.Field[string]                       `json:"filename"`
+	Metadata  param.Field[interface{}]                  `json:"metadata"`
 	Mime      param.Field[string]                       `json:"mime"`
 	Name      param.Field[string]                       `json:"name"`
 	Source    param.Field[interface{}]                  `json:"source"`
