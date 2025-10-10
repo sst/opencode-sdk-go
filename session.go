@@ -373,6 +373,7 @@ type AssistantMessage struct {
 	Time       AssistantMessageTime   `json:"time,required"`
 	Tokens     AssistantMessageTokens `json:"tokens,required"`
 	Error      AssistantMessageError  `json:"error"`
+	Finish     string                 `json:"finish"`
 	Summary    bool                   `json:"summary"`
 	JSON       assistantMessageJSON   `json:"-"`
 }
@@ -392,6 +393,7 @@ type assistantMessageJSON struct {
 	Time        apijson.Field
 	Tokens      apijson.Field
 	Error       apijson.Field
+	Finish      apijson.Field
 	Summary     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -919,6 +921,7 @@ type Message struct {
 	Cost float64     `json:"cost"`
 	// This field can have the runtime type of [AssistantMessageError].
 	Error   interface{} `json:"error"`
+	Finish  string      `json:"finish"`
 	Mode    string      `json:"mode"`
 	ModelID string      `json:"modelID"`
 	// This field can have the runtime type of [AssistantMessagePath].
@@ -941,6 +944,7 @@ type messageJSON struct {
 	Time        apijson.Field
 	Cost        apijson.Field
 	Error       apijson.Field
+	Finish      apijson.Field
 	Mode        apijson.Field
 	ModelID     apijson.Field
 	Path        apijson.Field
@@ -1871,13 +1875,16 @@ func (r toolPartJSON) RawJSON() string {
 func (r ToolPart) implementsPart() {}
 
 type ToolPartState struct {
+	// This field can have the runtime type of [map[string]interface{}].
+	Input  interface{}         `json:"input,required"`
 	Status ToolPartStateStatus `json:"status,required"`
-	Error  string              `json:"error"`
-	// This field can have the runtime type of [interface{}], [map[string]interface{}].
-	Input interface{} `json:"input"`
+	// This field can have the runtime type of [[]FilePart].
+	Attachments interface{} `json:"attachments"`
+	Error       string      `json:"error"`
 	// This field can have the runtime type of [map[string]interface{}].
 	Metadata interface{} `json:"metadata"`
 	Output   string      `json:"output"`
+	Raw      string      `json:"raw"`
 	// This field can have the runtime type of [ToolStateRunningTime],
 	// [ToolStateCompletedTime], [ToolStateErrorTime].
 	Time  interface{}       `json:"time"`
@@ -1888,11 +1895,13 @@ type ToolPartState struct {
 
 // toolPartStateJSON contains the JSON metadata for the struct [ToolPartState]
 type toolPartStateJSON struct {
-	Status      apijson.Field
-	Error       apijson.Field
 	Input       apijson.Field
+	Status      apijson.Field
+	Attachments apijson.Field
+	Error       apijson.Field
 	Metadata    apijson.Field
 	Output      apijson.Field
+	Raw         apijson.Field
 	Time        apijson.Field
 	Title       apijson.Field
 	raw         string
@@ -1982,13 +1991,14 @@ func (r ToolPartType) IsKnown() bool {
 }
 
 type ToolStateCompleted struct {
-	Input    map[string]interface{}   `json:"input,required"`
-	Metadata map[string]interface{}   `json:"metadata,required"`
-	Output   string                   `json:"output,required"`
-	Status   ToolStateCompletedStatus `json:"status,required"`
-	Time     ToolStateCompletedTime   `json:"time,required"`
-	Title    string                   `json:"title,required"`
-	JSON     toolStateCompletedJSON   `json:"-"`
+	Input       map[string]interface{}   `json:"input,required"`
+	Metadata    map[string]interface{}   `json:"metadata,required"`
+	Output      string                   `json:"output,required"`
+	Status      ToolStateCompletedStatus `json:"status,required"`
+	Time        ToolStateCompletedTime   `json:"time,required"`
+	Title       string                   `json:"title,required"`
+	Attachments []FilePart               `json:"attachments"`
+	JSON        toolStateCompletedJSON   `json:"-"`
 }
 
 // toolStateCompletedJSON contains the JSON metadata for the struct
@@ -2000,6 +2010,7 @@ type toolStateCompletedJSON struct {
 	Status      apijson.Field
 	Time        apijson.Field
 	Title       apijson.Field
+	Attachments apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -2121,6 +2132,8 @@ func (r toolStateErrorTimeJSON) RawJSON() string {
 }
 
 type ToolStatePending struct {
+	Input  map[string]interface{} `json:"input,required"`
+	Raw    string                 `json:"raw,required"`
 	Status ToolStatePendingStatus `json:"status,required"`
 	JSON   toolStatePendingJSON   `json:"-"`
 }
@@ -2128,6 +2141,8 @@ type ToolStatePending struct {
 // toolStatePendingJSON contains the JSON metadata for the struct
 // [ToolStatePending]
 type toolStatePendingJSON struct {
+	Input       apijson.Field
+	Raw         apijson.Field
 	Status      apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -2158,7 +2173,7 @@ func (r ToolStatePendingStatus) IsKnown() bool {
 }
 
 type ToolStateRunning struct {
-	Input    interface{}            `json:"input,required"`
+	Input    map[string]interface{} `json:"input,required"`
 	Status   ToolStateRunningStatus `json:"status,required"`
 	Time     ToolStateRunningTime   `json:"time,required"`
 	Metadata map[string]interface{} `json:"metadata"`

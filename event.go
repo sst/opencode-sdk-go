@@ -54,7 +54,7 @@ func (r *EventService) ListStreaming(ctx context.Context, query EventListParams,
 type EventListResponse struct {
 	// This field can have the runtime type of
 	// [EventListResponseEventInstallationUpdatedProperties],
-	// [EventListResponseEventLspClientDiagnosticsProperties],
+	// [EventListResponseEventLspClientDiagnosticsProperties], [interface{}],
 	// [EventListResponseEventMessageUpdatedProperties],
 	// [EventListResponseEventMessageRemovedProperties],
 	// [EventListResponseEventMessagePartUpdatedProperties],
@@ -67,8 +67,7 @@ type EventListResponse struct {
 	// [EventListResponseEventSessionIdleProperties],
 	// [EventListResponseEventSessionUpdatedProperties],
 	// [EventListResponseEventSessionDeletedProperties],
-	// [EventListResponseEventSessionErrorProperties], [interface{}],
-	// [EventListResponseEventIdeInstalledProperties].
+	// [EventListResponseEventSessionErrorProperties].
 	Properties interface{}           `json:"properties,required"`
 	Type       EventListResponseType `json:"type,required"`
 	JSON       eventListResponseJSON `json:"-"`
@@ -103,7 +102,8 @@ func (r *EventListResponse) UnmarshalJSON(data []byte) (err error) {
 // Possible runtime types of the union are
 // [EventListResponseEventInstallationUpdated],
 // [EventListResponseEventLspClientDiagnostics],
-// [EventListResponseEventMessageUpdated], [EventListResponseEventMessageRemoved],
+// [EventListResponseEventLspUpdated], [EventListResponseEventMessageUpdated],
+// [EventListResponseEventMessageRemoved],
 // [EventListResponseEventMessagePartUpdated],
 // [EventListResponseEventMessagePartRemoved],
 // [EventListResponseEventSessionCompacted],
@@ -112,14 +112,15 @@ func (r *EventListResponse) UnmarshalJSON(data []byte) (err error) {
 // [EventListResponseEventFileWatcherUpdated], [EventListResponseEventTodoUpdated],
 // [EventListResponseEventSessionIdle], [EventListResponseEventSessionUpdated],
 // [EventListResponseEventSessionDeleted], [EventListResponseEventSessionError],
-// [EventListResponseEventServerConnected], [EventListResponseEventIdeInstalled].
+// [EventListResponseEventServerConnected].
 func (r EventListResponse) AsUnion() EventListResponseUnion {
 	return r.union
 }
 
 // Union satisfied by [EventListResponseEventInstallationUpdated],
 // [EventListResponseEventLspClientDiagnostics],
-// [EventListResponseEventMessageUpdated], [EventListResponseEventMessageRemoved],
+// [EventListResponseEventLspUpdated], [EventListResponseEventMessageUpdated],
+// [EventListResponseEventMessageRemoved],
 // [EventListResponseEventMessagePartUpdated],
 // [EventListResponseEventMessagePartRemoved],
 // [EventListResponseEventSessionCompacted],
@@ -127,8 +128,8 @@ func (r EventListResponse) AsUnion() EventListResponseUnion {
 // [EventListResponseEventPermissionReplied], [EventListResponseEventFileEdited],
 // [EventListResponseEventFileWatcherUpdated], [EventListResponseEventTodoUpdated],
 // [EventListResponseEventSessionIdle], [EventListResponseEventSessionUpdated],
-// [EventListResponseEventSessionDeleted], [EventListResponseEventSessionError],
-// [EventListResponseEventServerConnected] or [EventListResponseEventIdeInstalled].
+// [EventListResponseEventSessionDeleted], [EventListResponseEventSessionError] or
+// [EventListResponseEventServerConnected].
 type EventListResponseUnion interface {
 	implementsEventListResponse()
 }
@@ -144,6 +145,10 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(EventListResponseEventLspClientDiagnostics{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(EventListResponseEventLspUpdated{}),
 		},
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
@@ -204,10 +209,6 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(EventListResponseEventServerConnected{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventListResponseEventIdeInstalled{}),
 		},
 	)
 }
@@ -329,6 +330,45 @@ const (
 func (r EventListResponseEventLspClientDiagnosticsType) IsKnown() bool {
 	switch r {
 	case EventListResponseEventLspClientDiagnosticsTypeLspClientDiagnostics:
+		return true
+	}
+	return false
+}
+
+type EventListResponseEventLspUpdated struct {
+	Properties interface{}                          `json:"properties,required"`
+	Type       EventListResponseEventLspUpdatedType `json:"type,required"`
+	JSON       eventListResponseEventLspUpdatedJSON `json:"-"`
+}
+
+// eventListResponseEventLspUpdatedJSON contains the JSON metadata for the struct
+// [EventListResponseEventLspUpdated]
+type eventListResponseEventLspUpdatedJSON struct {
+	Properties  apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *EventListResponseEventLspUpdated) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r eventListResponseEventLspUpdatedJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r EventListResponseEventLspUpdated) implementsEventListResponse() {}
+
+type EventListResponseEventLspUpdatedType string
+
+const (
+	EventListResponseEventLspUpdatedTypeLspUpdated EventListResponseEventLspUpdatedType = "lsp.updated"
+)
+
+func (r EventListResponseEventLspUpdatedType) IsKnown() bool {
+	switch r {
+	case EventListResponseEventLspUpdatedTypeLspUpdated:
 		return true
 	}
 	return false
@@ -1385,71 +1425,12 @@ func (r EventListResponseEventServerConnectedType) IsKnown() bool {
 	return false
 }
 
-type EventListResponseEventIdeInstalled struct {
-	Properties EventListResponseEventIdeInstalledProperties `json:"properties,required"`
-	Type       EventListResponseEventIdeInstalledType       `json:"type,required"`
-	JSON       eventListResponseEventIdeInstalledJSON       `json:"-"`
-}
-
-// eventListResponseEventIdeInstalledJSON contains the JSON metadata for the struct
-// [EventListResponseEventIdeInstalled]
-type eventListResponseEventIdeInstalledJSON struct {
-	Properties  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventIdeInstalled) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventIdeInstalledJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r EventListResponseEventIdeInstalled) implementsEventListResponse() {}
-
-type EventListResponseEventIdeInstalledProperties struct {
-	Ide  string                                           `json:"ide,required"`
-	JSON eventListResponseEventIdeInstalledPropertiesJSON `json:"-"`
-}
-
-// eventListResponseEventIdeInstalledPropertiesJSON contains the JSON metadata for
-// the struct [EventListResponseEventIdeInstalledProperties]
-type eventListResponseEventIdeInstalledPropertiesJSON struct {
-	Ide         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventListResponseEventIdeInstalledProperties) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventListResponseEventIdeInstalledPropertiesJSON) RawJSON() string {
-	return r.raw
-}
-
-type EventListResponseEventIdeInstalledType string
-
-const (
-	EventListResponseEventIdeInstalledTypeIdeInstalled EventListResponseEventIdeInstalledType = "ide.installed"
-)
-
-func (r EventListResponseEventIdeInstalledType) IsKnown() bool {
-	switch r {
-	case EventListResponseEventIdeInstalledTypeIdeInstalled:
-		return true
-	}
-	return false
-}
-
 type EventListResponseType string
 
 const (
 	EventListResponseTypeInstallationUpdated  EventListResponseType = "installation.updated"
 	EventListResponseTypeLspClientDiagnostics EventListResponseType = "lsp.client.diagnostics"
+	EventListResponseTypeLspUpdated           EventListResponseType = "lsp.updated"
 	EventListResponseTypeMessageUpdated       EventListResponseType = "message.updated"
 	EventListResponseTypeMessageRemoved       EventListResponseType = "message.removed"
 	EventListResponseTypeMessagePartUpdated   EventListResponseType = "message.part.updated"
@@ -1465,12 +1446,11 @@ const (
 	EventListResponseTypeSessionDeleted       EventListResponseType = "session.deleted"
 	EventListResponseTypeSessionError         EventListResponseType = "session.error"
 	EventListResponseTypeServerConnected      EventListResponseType = "server.connected"
-	EventListResponseTypeIdeInstalled         EventListResponseType = "ide.installed"
 )
 
 func (r EventListResponseType) IsKnown() bool {
 	switch r {
-	case EventListResponseTypeInstallationUpdated, EventListResponseTypeLspClientDiagnostics, EventListResponseTypeMessageUpdated, EventListResponseTypeMessageRemoved, EventListResponseTypeMessagePartUpdated, EventListResponseTypeMessagePartRemoved, EventListResponseTypeSessionCompacted, EventListResponseTypePermissionUpdated, EventListResponseTypePermissionReplied, EventListResponseTypeFileEdited, EventListResponseTypeFileWatcherUpdated, EventListResponseTypeTodoUpdated, EventListResponseTypeSessionIdle, EventListResponseTypeSessionUpdated, EventListResponseTypeSessionDeleted, EventListResponseTypeSessionError, EventListResponseTypeServerConnected, EventListResponseTypeIdeInstalled:
+	case EventListResponseTypeInstallationUpdated, EventListResponseTypeLspClientDiagnostics, EventListResponseTypeLspUpdated, EventListResponseTypeMessageUpdated, EventListResponseTypeMessageRemoved, EventListResponseTypeMessagePartUpdated, EventListResponseTypeMessagePartRemoved, EventListResponseTypeSessionCompacted, EventListResponseTypePermissionUpdated, EventListResponseTypePermissionReplied, EventListResponseTypeFileEdited, EventListResponseTypeFileWatcherUpdated, EventListResponseTypeTodoUpdated, EventListResponseTypeSessionIdle, EventListResponseTypeSessionUpdated, EventListResponseTypeSessionDeleted, EventListResponseTypeSessionError, EventListResponseTypeServerConnected:
 		return true
 	}
 	return false
