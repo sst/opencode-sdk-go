@@ -1567,19 +1567,20 @@ func (r configProviderJSON) RawJSON() string {
 }
 
 type ConfigProviderModel struct {
-	ID           string                       `json:"id"`
-	Attachment   bool                         `json:"attachment"`
-	Cost         ConfigProviderModelsCost     `json:"cost"`
-	Experimental bool                         `json:"experimental"`
-	Limit        ConfigProviderModelsLimit    `json:"limit"`
-	Name         string                       `json:"name"`
-	Options      map[string]interface{}       `json:"options"`
-	Provider     ConfigProviderModelsProvider `json:"provider"`
-	Reasoning    bool                         `json:"reasoning"`
-	ReleaseDate  string                       `json:"release_date"`
-	Temperature  bool                         `json:"temperature"`
-	ToolCall     bool                         `json:"tool_call"`
-	JSON         configProviderModelJSON      `json:"-"`
+	ID           string                         `json:"id"`
+	Attachment   bool                           `json:"attachment"`
+	Cost         ConfigProviderModelsCost       `json:"cost"`
+	Experimental bool                           `json:"experimental"`
+	Limit        ConfigProviderModelsLimit      `json:"limit"`
+	Modalities   ConfigProviderModelsModalities `json:"modalities"`
+	Name         string                         `json:"name"`
+	Options      map[string]interface{}         `json:"options"`
+	Provider     ConfigProviderModelsProvider   `json:"provider"`
+	Reasoning    bool                           `json:"reasoning"`
+	ReleaseDate  string                         `json:"release_date"`
+	Temperature  bool                           `json:"temperature"`
+	ToolCall     bool                           `json:"tool_call"`
+	JSON         configProviderModelJSON        `json:"-"`
 }
 
 // configProviderModelJSON contains the JSON metadata for the struct
@@ -1590,6 +1591,7 @@ type configProviderModelJSON struct {
 	Cost         apijson.Field
 	Experimental apijson.Field
 	Limit        apijson.Field
+	Modalities   apijson.Field
 	Name         apijson.Field
 	Options      apijson.Field
 	Provider     apijson.Field
@@ -1657,6 +1659,65 @@ func (r *ConfigProviderModelsLimit) UnmarshalJSON(data []byte) (err error) {
 
 func (r configProviderModelsLimitJSON) RawJSON() string {
 	return r.raw
+}
+
+type ConfigProviderModelsModalities struct {
+	Input  []ConfigProviderModelsModalitiesInput  `json:"input,required"`
+	Output []ConfigProviderModelsModalitiesOutput `json:"output,required"`
+	JSON   configProviderModelsModalitiesJSON     `json:"-"`
+}
+
+// configProviderModelsModalitiesJSON contains the JSON metadata for the struct
+// [ConfigProviderModelsModalities]
+type configProviderModelsModalitiesJSON struct {
+	Input       apijson.Field
+	Output      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConfigProviderModelsModalities) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r configProviderModelsModalitiesJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConfigProviderModelsModalitiesInput string
+
+const (
+	ConfigProviderModelsModalitiesInputText  ConfigProviderModelsModalitiesInput = "text"
+	ConfigProviderModelsModalitiesInputAudio ConfigProviderModelsModalitiesInput = "audio"
+	ConfigProviderModelsModalitiesInputImage ConfigProviderModelsModalitiesInput = "image"
+	ConfigProviderModelsModalitiesInputVideo ConfigProviderModelsModalitiesInput = "video"
+	ConfigProviderModelsModalitiesInputPdf   ConfigProviderModelsModalitiesInput = "pdf"
+)
+
+func (r ConfigProviderModelsModalitiesInput) IsKnown() bool {
+	switch r {
+	case ConfigProviderModelsModalitiesInputText, ConfigProviderModelsModalitiesInputAudio, ConfigProviderModelsModalitiesInputImage, ConfigProviderModelsModalitiesInputVideo, ConfigProviderModelsModalitiesInputPdf:
+		return true
+	}
+	return false
+}
+
+type ConfigProviderModelsModalitiesOutput string
+
+const (
+	ConfigProviderModelsModalitiesOutputText  ConfigProviderModelsModalitiesOutput = "text"
+	ConfigProviderModelsModalitiesOutputAudio ConfigProviderModelsModalitiesOutput = "audio"
+	ConfigProviderModelsModalitiesOutputImage ConfigProviderModelsModalitiesOutput = "image"
+	ConfigProviderModelsModalitiesOutputVideo ConfigProviderModelsModalitiesOutput = "video"
+	ConfigProviderModelsModalitiesOutputPdf   ConfigProviderModelsModalitiesOutput = "pdf"
+)
+
+func (r ConfigProviderModelsModalitiesOutput) IsKnown() bool {
+	switch r {
+	case ConfigProviderModelsModalitiesOutputText, ConfigProviderModelsModalitiesOutputAudio, ConfigProviderModelsModalitiesOutputImage, ConfigProviderModelsModalitiesOutputVideo, ConfigProviderModelsModalitiesOutputPdf:
+		return true
+	}
+	return false
 }
 
 type ConfigProviderModelsProvider struct {
@@ -1807,6 +1868,8 @@ type KeybindsConfig struct {
 	AppExit string `json:"app_exit"`
 	// Show help dialog
 	AppHelp string `json:"app_help"`
+	// List available commands
+	CommandList string `json:"command_list"`
 	// Open external editor
 	EditorOpen string `json:"editor_open"`
 	// @deprecated Close file
@@ -1881,6 +1944,10 @@ type KeybindsConfig struct {
 	SessionTimeline string `json:"session_timeline"`
 	// Unshare current session
 	SessionUnshare string `json:"session_unshare"`
+	// Toggle sidebar
+	SidebarToggle string `json:"sidebar_toggle"`
+	// View status
+	StatusView string `json:"status_view"`
 	// @deprecated use agent_cycle. Next agent
 	SwitchAgent string `json:"switch_agent"`
 	// @deprecated use agent_cycle_reverse. Previous agent
@@ -1905,6 +1972,7 @@ type keybindsConfigJSON struct {
 	AgentList                apijson.Field
 	AppExit                  apijson.Field
 	AppHelp                  apijson.Field
+	CommandList              apijson.Field
 	EditorOpen               apijson.Field
 	FileClose                apijson.Field
 	FileDiffToggle           apijson.Field
@@ -1942,6 +2010,8 @@ type keybindsConfigJSON struct {
 	SessionShare             apijson.Field
 	SessionTimeline          apijson.Field
 	SessionUnshare           apijson.Field
+	SidebarToggle            apijson.Field
+	StatusView               apijson.Field
 	SwitchAgent              apijson.Field
 	SwitchAgentReverse       apijson.Field
 	SwitchMode               apijson.Field
