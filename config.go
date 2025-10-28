@@ -1578,6 +1578,7 @@ type ConfigProviderModel struct {
 	Provider     ConfigProviderModelsProvider   `json:"provider"`
 	Reasoning    bool                           `json:"reasoning"`
 	ReleaseDate  string                         `json:"release_date"`
+	Status       ConfigProviderModelsStatus     `json:"status"`
 	Temperature  bool                           `json:"temperature"`
 	ToolCall     bool                           `json:"tool_call"`
 	JSON         configProviderModelJSON        `json:"-"`
@@ -1597,6 +1598,7 @@ type configProviderModelJSON struct {
 	Provider     apijson.Field
 	Reasoning    apijson.Field
 	ReleaseDate  apijson.Field
+	Status       apijson.Field
 	Temperature  apijson.Field
 	ToolCall     apijson.Field
 	raw          string
@@ -1741,6 +1743,21 @@ func (r configProviderModelsProviderJSON) RawJSON() string {
 	return r.raw
 }
 
+type ConfigProviderModelsStatus string
+
+const (
+	ConfigProviderModelsStatusAlpha ConfigProviderModelsStatus = "alpha"
+	ConfigProviderModelsStatusBeta  ConfigProviderModelsStatus = "beta"
+)
+
+func (r ConfigProviderModelsStatus) IsKnown() bool {
+	switch r {
+	case ConfigProviderModelsStatusAlpha, ConfigProviderModelsStatusBeta:
+		return true
+	}
+	return false
+}
+
 type ConfigProviderOptions struct {
 	APIKey  string `json:"apiKey"`
 	BaseURL string `json:"baseURL"`
@@ -1868,8 +1885,6 @@ type KeybindsConfig struct {
 	AppExit string `json:"app_exit"`
 	// Show help dialog
 	AppHelp string `json:"app_help"`
-	// List available commands
-	CommandList string `json:"command_list"`
 	// Open external editor
 	EditorOpen string `json:"editor_open"`
 	// @deprecated Close file
@@ -1944,10 +1959,6 @@ type KeybindsConfig struct {
 	SessionTimeline string `json:"session_timeline"`
 	// Unshare current session
 	SessionUnshare string `json:"session_unshare"`
-	// Toggle sidebar
-	SidebarToggle string `json:"sidebar_toggle"`
-	// View status
-	StatusView string `json:"status_view"`
 	// @deprecated use agent_cycle. Next agent
 	SwitchAgent string `json:"switch_agent"`
 	// @deprecated use agent_cycle_reverse. Previous agent
@@ -1972,7 +1983,6 @@ type keybindsConfigJSON struct {
 	AgentList                apijson.Field
 	AppExit                  apijson.Field
 	AppHelp                  apijson.Field
-	CommandList              apijson.Field
 	EditorOpen               apijson.Field
 	FileClose                apijson.Field
 	FileDiffToggle           apijson.Field
@@ -2010,8 +2020,6 @@ type keybindsConfigJSON struct {
 	SessionShare             apijson.Field
 	SessionTimeline          apijson.Field
 	SessionUnshare           apijson.Field
-	SidebarToggle            apijson.Field
-	StatusView               apijson.Field
 	SwitchAgent              apijson.Field
 	SwitchAgentReverse       apijson.Field
 	SwitchMode               apijson.Field

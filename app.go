@@ -64,6 +64,7 @@ type Model struct {
 	Experimental bool                   `json:"experimental"`
 	Modalities   ModelModalities        `json:"modalities"`
 	Provider     ModelProvider          `json:"provider"`
+	Status       ModelStatus            `json:"status"`
 	JSON         modelJSON              `json:"-"`
 }
 
@@ -82,6 +83,7 @@ type modelJSON struct {
 	Experimental apijson.Field
 	Modalities   apijson.Field
 	Provider     apijson.Field
+	Status       apijson.Field
 	raw          string
 	ExtraFields  map[string]apijson.Field
 }
@@ -218,6 +220,21 @@ func (r *ModelProvider) UnmarshalJSON(data []byte) (err error) {
 
 func (r modelProviderJSON) RawJSON() string {
 	return r.raw
+}
+
+type ModelStatus string
+
+const (
+	ModelStatusAlpha ModelStatus = "alpha"
+	ModelStatusBeta  ModelStatus = "beta"
+)
+
+func (r ModelStatus) IsKnown() bool {
+	switch r {
+	case ModelStatusAlpha, ModelStatusBeta:
+		return true
+	}
+	return false
 }
 
 type Provider struct {
