@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.19.1 (2025-12-06)
+
+Full Changelog: [v0.19.0...v0.19.1](https://github.com/sst/opencode-sdk-go/compare/v0.19.0...v0.19.1)
+
+### Bug Fixes
+
+* **mcp:** correct code tool API endpoint ([b9aef1e](https://github.com/sst/opencode-sdk-go/commit/b9aef1e4255cfb2b1ee9f0eab398c3c0c73409b5))
+* rename param to avoid collision ([ea1eb77](https://github.com/sst/opencode-sdk-go/commit/ea1eb7755ab1b9288d7a8aff212d1d745b47c1f4))
+
+
+### Chores
+
+* elide duplicate aliases ([2ecca60](https://github.com/sst/opencode-sdk-go/commit/2ecca60adf1a52c6d9bd06c81b2654cb6385b274))
+* **internal:** codegen related update ([9b0af14](https://github.com/sst/opencode-sdk-go/commit/9b0af14abbeb175b75b805a9a577ce2990d5c9a2))
+
 ## 0.19.0 (2025-10-28)
 
 Full Changelog: [v0.18.0...v0.19.0](https://github.com/sst/opencode-sdk-go/compare/v0.18.0...v0.19.0)
