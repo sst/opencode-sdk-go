@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.2 (2025-12-18)
+
+Full Changelog: [v0.19.1...v0.19.2](https://github.com/sst/opencode-sdk-go/compare/v0.19.1...v0.19.2)
+
+### Bug Fixes
+
+* skip usage tests that don't work with Prism ([dc3c60e](https://github.com/sst/opencode-sdk-go/commit/dc3c60ecc63a66a08097f181358e09fd8a49185a))
+
 ## 0.19.1 (2025-12-06)
 
 Full Changelog: [v0.19.0...v0.19.1](https://github.com/sst/opencode-sdk-go/compare/v0.19.0...v0.19.1)
