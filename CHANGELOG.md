@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.3 (2026-01-06)
+
+Full Changelog: [v0.19.2...v0.19.3](https://github.com/sst/opencode-sdk-go/compare/v0.19.2...v0.19.3)
+
+### Chores
+
+* **internal:** codegen related update ([07a9537](https://github.com/sst/opencode-sdk-go/commit/07a9537b28779927c9bfaa1eddad7b757f018a3d))
+
 ## 0.19.2 (2025-12-18)
 
 Full Changelog: [v0.19.1...v0.19.2](https://github.com/sst/opencode-sdk-go/compare/v0.19.1...v0.19.2)
